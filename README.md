@@ -4,7 +4,7 @@ Web Application Firewall
 ## Contents
 
 - Chapter 1: Introduction
-   - 1. Aim:
+   - 1.1 Aim:
    - 1.2 Scope
    - 1.3 Overview
 - Chapter 2: Literature Survey
@@ -19,9 +19,9 @@ Web Application Firewall
    - 4.1 Hardware specifications
    - 4.2 Software specifications
 - Chapter 5: Modules
-      - 5.2.1 Web Proxy Server
-      - 5.2.2 Filter Rules (Filtering)
-      - 5.2.3 Intrusion Log
+   - 5.2.1 Web Proxy Server
+   - 5.2.2 Filter Rules (Filtering)
+   - 5.2.3 Intrusion Log
 - Chapter 6: Testing
    - 6.1 Testing
 - Chapter 7: Conclusion and Further enhancements
@@ -299,7 +299,7 @@ Actual web application (online.hnbgu.ac.in) (website server)
 ##### ➢
 
 ```
-Firewall address : 127.0.0.
+Firewall address : 127.0.0.1
 ```
 ```
 ➢ Firewall Port : 8888
@@ -307,7 +307,7 @@ Firewall address : 127.0.0.
 ##### ➢
 
 ```
-Visitor address :
+Visitor address : 192.168.43.60
 ```
 ##### ➢
 
@@ -334,13 +334,13 @@ Actual web application (online.hnbgu.ac.in) (website server)
 ##### ➢
 
 ```
-Firewall address : 127.0.0.
+Firewall address : 127.0.0.1
 ```
 ```
 ➢ Firewall Port : 8888
 ```
 ```
-➢ Visitor address :
+➢ Visitor address : 192.168.43.1
 ```
 ##### ➢
 
@@ -368,13 +368,13 @@ Actual web application (online.hnbgu.ac.in) (website server)
 ##### ➢
 
 ```
-Firewall address : 127.0.0.
+Firewall address : 127.0.0.1
 ```
 ```
 ➢ Firewall Port : 8888
 ```
 ```
-➢ Visitor address :
+➢ Visitor address : 192.168.43.131
 ```
 ##### ➢
 
