@@ -236,6 +236,7 @@ def main():
     if argl>2:
         #Check DEBUG Flag
         if str(sys.argv[2]).upper()=="DEBUG":
+            global DEBUG
             DEBUG=True
     
     host = ''
