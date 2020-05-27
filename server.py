@@ -66,7 +66,8 @@ def prthread(conn, client_addr):
             infoOut("[BLOCKED]Country Blocked("+ipdetails['country']+")",first_line,client_addr)
             conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n')
             conn.close()
-            sys.exit(1)
+            try:sys.exit(1)
+            except:pass
     except:
         print("Country check Failed !")
     # check Country Blocking END
@@ -77,7 +78,8 @@ def prthread(conn, client_addr):
             infoOut("[BLOCKED]PROXY IP",first_line,client_addr)
             conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service can not be used with proxy !!</h1>\r\n')
             conn.close()
-            sys.exit(1)
+            try:sys.exit(1)
+            except:pass
     except:
         print("Proxy IP check Failed !")
     # check PROXY IPs END
@@ -88,7 +90,8 @@ def prthread(conn, client_addr):
             infoOut("[BLOCKED]IP Blacklisted",first_line,client_addr)
             conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n')
             conn.close()
-            sys.exit(1)
+            try:sys.exit(1)
+            except:pass
     except:
         print("Blocked IP check Failed !")
     # check BLOCKED IPs END
@@ -111,8 +114,10 @@ def prthread(conn, client_addr):
                 conn.send(failattemtmsg)
                 conn.close()
                 infoOut("[BLOCKED]SQL Injection",first_line,client_addr)
-                open('intrusion.log','a+').write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act)+"\n")
-                sys.exit(1)
+                with open('intrusion.log','a+') as intrusionlogfile:
+                    intrusionlogfile.write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act)+"\n")
+                try:sys.exit(1)
+                except:pass
 
         first_line1=first_line.upper()
         for qw in zw:
@@ -122,7 +127,8 @@ def prthread(conn, client_addr):
                 infoOut("[BLOCKED]SQL Injection",first_line,client_addr)
                 with open('intrusion.log','a+') as intrusionlogfile:
                     intrusionlogfile.write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
-                sys.exit(1)
+                try:sys.exit(1)
+                except:pass
         
         sta=sta.replace(b'&frasl;',b'/')
         request=sta+act
@@ -193,7 +199,8 @@ def prthread(conn, client_addr):
         if s:s.close()
         if conn:conn.close()
         infoOut("Session Reset",first_line,client_addr)
-        sys.exit(1)
+        try:sys.exit(1)
+        except:pass
 
 #Output info if DEBUG true and color code as per rule hitted
 def infoOut(rtyp,request,rfrom):
@@ -256,7 +263,8 @@ def main():
         if s:
             s.close()
         trace ("Error while opening socket : "+ str(e))
-        sys.exit(1)
+        try:sys.exit(1)
+        except:pass
 
     # connections from client
     while True:
