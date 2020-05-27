@@ -1,7 +1,5 @@
-import os
 import sys
 import socket
-import time
 import _thread as thread
 import requests
 import json
@@ -69,8 +67,8 @@ def prthread(conn, client_addr):
             conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n')
             conn.close()
             sys.exit(1)
-    except  Exception as ex:
-        print("Country check Failed !",ex)
+    except:
+        print("Country check Failed !")
     # check Country Blocking END
 
     # check PROXY IPs START
@@ -80,8 +78,8 @@ def prthread(conn, client_addr):
             conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service can not be used with proxy !!</h1>\r\n')
             conn.close()
             sys.exit(1)
-    except Exception as ex:
-        print("Proxy IP check Failed !",ex)
+    except:
+        print("Proxy IP check Failed !")
     # check PROXY IPs END
 
     # check BLOCKED IPs START
@@ -91,8 +89,8 @@ def prthread(conn, client_addr):
             conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n')
             conn.close()
             sys.exit(1)
-    except Exception as ex:
-        print("Blocked IP check Failed !",ex)
+    except:
+        print("Blocked IP check Failed !")
     # check BLOCKED IPs END
 
     #special Character Sanitisation START
@@ -100,8 +98,8 @@ def prthread(conn, client_addr):
         sp_char={'‘': '&lsquo;',"'":'&rsquo' ,'’': '&rsquo;', '‚': '&sbquo;','"': '&ldquo;', '“': '&ldquo;', '”': '&rdquo;', '„': '&bdquo;', '†': '&dagger;', '‡': '&Dagger;', '‰': '&permil;', '‹': '&lsaquo;', '›': '&rsaquo;', '♠': '&spades;', '♣': '&clubs;', '♥': '&hearts;', '♦': '&diams;', '‾': '&oline;', '←': '&larr;', '↑': '&uarr;', '→': '&rarr;', '↓': '&darr;', '↖': '&nwarr;', '↗': '&nearr;', '↙': '&swarr;', '↘': '&searr;', '™': '&trade;', '/': '&frasl;', '<': '&lt;', '>': '&gt;', '…': '&hellip;', '–': '&ndash;', '—': '&mdash;', '¡': '&iexcl;', '¢': '&cent;', '£': '&pound;', '¤': '&curren;', '¥': '&yen;', '¦': '&brvbar; or &brkbar;', '§': '&sect;', '¨': '&uml; or &die;', '©': '&copy;', 'ª': '&ordf;', '«': '&laquo;', '\xad': '&shy;', '®': '&reg;', '¯': '&macr; or &hibar;', '°': '&deg;', '±': '&plusmn;', '²': '&sup2;', '³': '&sup3;', '´': '&acute;', 'µ': '&micro;', '¶': '&para;', '·': '&middot;', '¸': '&cedil;', '¹': '&sup1;', 'º': '&ordm;', '»': '&raquo;', '¼': '&frac14;', '½': '&frac12;', '¾': '&frac34;', '¿': '&iquest;', 'À': '&Agrave;', 'Á': '&Aacute;', 'Â': '&Acirc;', 'Ã': '&Atilde;', 'Ä': '&Auml;', 'Å': '&Aring;', 'Æ': '&AElig;', 'Ç': '&Ccedil;', 'È': '&Egrave;', 'É': '&Eacute;', 'Ê': '&Ecirc;', 'Ë': '&Euml;', 'Ì': '&Igrave;', 'Í': '&Iacute;', 'Î': '&Icirc;', 'Ï': '&Iuml;', 'Ð': '&ETH;', 'Ñ': '&Ntilde;', 'Ò': '&Ograve;', 'Ó': '&Oacute;', 'Ô': '&Ocirc;', 'Õ': '&Otilde;', 'Ö': '&Ouml;', '×': '&times;', 'Ø': '&Oslash;', 'Ù': '&Ugrave;', 'Ú': '&Uacute;', 'Û': '&Ucirc;', 'Ü': '&Uuml;', 'Ý': '&Yacute;', 'Þ': '&THORN;', 'ß': '&szlig;', 'à': '&agrave;', 'á': '&aacute;', 'â': '&acirc;', 'ã': '&atilde;', 'ä': '&auml;', 'å': '&aring;', 'æ': '&aelig;', 'ç': '&ccedil;', 'è': '&egrave;', 'é': '&eacute;', 'ê': '&ecirc;', 'ë': '&euml;', 'ì': '&igrave;', 'í': '&iacute;', 'î': '&icirc;', 'ï': '&iuml;', 'ð': '&eth;', 'ñ': '&ntilde;', 'ò': '&ograve;', 'ó': '&oacute;', 'ô': '&ocirc;', 'õ': '&otilde;', 'ö': '&ouml;', '÷': '&divide;', 'ø': '&oslash;', 'ù': '&ugrave;', 'ú': '&uacute;', 'û': '&ucirc;', 'ü': '&uuml;', 'ý': '&yacute;', 'þ': '&thorn;', 'ÿ': '&yuml;', '∞': '&infin;'}
         for i in sp_char:
             act=act.replace(i.encode('utf-8'),sp_char[i].encode('utf-8'))
-    except  Exception as ex:
-        print("Special Character Sanitization Failed !",ex)
+    except:
+        print("Special Character Sanitization Failed !")
     #special Character Sanitisation END
     
     #SQL Injection Check START
@@ -122,13 +120,14 @@ def prthread(conn, client_addr):
                 conn.send(failattemtmsg)
                 conn.close()
                 infoOut("[BLOCKED]SQL Injection",first_line,client_addr)
-                open('intrusion.log','a+').write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
+                with open('intrusion.log','a+') as intrusionlogfile:
+                    intrusionlogfile.write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
                 sys.exit(1)
         
         sta=sta.replace(b'&frasl;',b'/')
         request=sta+act
-    except  Exception as ex:
-        print("SQL Injection Check Failed !",ex)
+    except:
+        print("SQL Injection Check Failed !")
     #SQL Injection Check END
 
     #Intelligent Request Testing START (PENDING)
@@ -136,8 +135,8 @@ def prthread(conn, client_addr):
         if INTELLIGENT_REQ_TEST:
             ##pass request to machine learning model for testing
             pass
-    except  Exception as ex:
-        print('Failed Intelligent Request Testing !', ex)
+    except:
+        print('Failed Intelligent Request Testing !')
     #Intelligent Request Testing END
 
 
@@ -237,8 +236,8 @@ def main():
     if argl>2:
         #Check DEBUG Flag
         if str(sys.argv[2]).upper()=="DEBUG":
-            global DEBUG
             DEBUG=True
+    
     host = ''
     print ("WAF Server Running on ",host,":",port)
 
