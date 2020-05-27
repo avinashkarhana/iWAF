@@ -3,13 +3,49 @@ import sys
 import socket
 import time
 import _thread as thread
+import requests
+import json
 
-DEBUG = False                # debug mode to see all debug messages
-BLOCKED_CLIENTS = ['192.168.43.131']         # BLOCKED clients
+####################################################################
+####################### Default Configuration START#################
+####################################################################
+
+DEBUG = True                 # debug mode to see all debug messages
+BLOCKED_CLIENTS = ['192.168.43.2']         # BLOCKED clients
 REQUEST_HOLD = 50            # number connections to hold
 MAX_RCV = 999999             # max number data bytes to receive
+PROXY_BLOCK = True           # Block access through known Web Proxy or VPN
+INTELLIGENT_REQ_TEST = False # Intelligent request testing via Machine Learning (Increases Response time!)
+BLOCKED_COUNTRY = ['IN']     # Blocked Access in specific countries via IP geo location
 
+####################################################################
+####################### Default Configuration END###################
+####################################################################
+
+ipdetailFileds=["status","message","country","countryCode","region","regionName","city","district","zip","lat","lon","timezone","currency","isp","org","as","mobile","proxy","hosting"]
+SQL_Injection_Rules=[ b'%2BAND%28UNION', b'%2BAND%2BUNION%28', b'UNION%2BSELECT', b'||%2B%28SELECT', b'||%2BSUBSTR(', b'+AND+UNION', b'+AND+UNION(', b'UNION+SELECT', b'||+(SELECT', b'||+SUBSTR(' ,b' AND UNION', b' AND UNION(', b'UNION SELECT', b'UNION%20SELECT', b'|| (SELECT', b'|| SUBSTR(' ]
+ipcache={}
+
+def ipinfo(ip):
+    if ip not in ipcache:
+        url="http://ip-api.com/json/"+ip+'?fields=status,message,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,currency,isp,org,as,mobile,proxy,hosting'
+        z=str(requests.get(url,'30').content)[2:-1]
+        resp=json.loads(str(z))
+        ipcache[ip]=resp
+    else:
+        resp=ipcache[ip]
+    return(resp)
+
+#working thread
 def prthread(conn, client_addr):
+    # get client IP Info
+    ipdetails=ipinfo(str(client_addr[0]))
+    #set essential dict keys if status fail
+    if ipdetails['status']=='fail':
+        for b in ipdetailFileds:
+            if b!='status':
+                ipdetails[b]=''
+
     # capture request from client
     request = conn.recv(MAX_RCV)
     result = request.find(b'\r\n\r\n')
@@ -20,46 +56,112 @@ def prthread(conn, client_addr):
     sta=request[:result+4]
     act=request[result+4:]
 
-    #Apply WAF rules START
-    failattemtmsg=b"\r\nHTTP/1.1 200 OK\r\n\r\nWeb Application Firewall Detected Suspecious activity !!\r\n"
-
-     #special Character replace
-    sp_char={'‘': '&lsquo;',"'":'&rsquo' ,'’': '&rsquo;', '‚': '&sbquo;','"': '&ldquo;', '“': '&ldquo;', '”': '&rdquo;', '„': '&bdquo;', '†': '&dagger;', '‡': '&Dagger;', '‰': '&permil;', '‹': '&lsaquo;', '›': '&rsaquo;', '♠': '&spades;', '♣': '&clubs;', '♥': '&hearts;', '♦': '&diams;', '‾': '&oline;', '←': '&larr;', '↑': '&uarr;', '→': '&rarr;', '↓': '&darr;', '↖': '&nwarr;', '↗': '&nearr;', '↙': '&swarr;', '↘': '&searr;', '™': '&trade;', '/': '&frasl;', '<': '&lt;', '>': '&gt;', '…': '&hellip;', '–': '&ndash;', '—': '&mdash;', '¡': '&iexcl;', '¢': '&cent;', '£': '&pound;', '¤': '&curren;', '¥': '&yen;', '¦': '&brvbar; or &brkbar;', '§': '&sect;', '¨': '&uml; or &die;', '©': '&copy;', 'ª': '&ordf;', '«': '&laquo;', '\xad': '&shy;', '®': '&reg;', '¯': '&macr; or &hibar;', '°': '&deg;', '±': '&plusmn;', '²': '&sup2;', '³': '&sup3;', '´': '&acute;', 'µ': '&micro;', '¶': '&para;', '·': '&middot;', '¸': '&cedil;', '¹': '&sup1;', 'º': '&ordm;', '»': '&raquo;', '¼': '&frac14;', '½': '&frac12;', '¾': '&frac34;', '¿': '&iquest;', 'À': '&Agrave;', 'Á': '&Aacute;', 'Â': '&Acirc;', 'Ã': '&Atilde;', 'Ä': '&Auml;', 'Å': '&Aring;', 'Æ': '&AElig;', 'Ç': '&Ccedil;', 'È': '&Egrave;', 'É': '&Eacute;', 'Ê': '&Ecirc;', 'Ë': '&Euml;', 'Ì': '&Igrave;', 'Í': '&Iacute;', 'Î': '&Icirc;', 'Ï': '&Iuml;', 'Ð': '&ETH;', 'Ñ': '&Ntilde;', 'Ò': '&Ograve;', 'Ó': '&Oacute;', 'Ô': '&Ocirc;', 'Õ': '&Otilde;', 'Ö': '&Ouml;', '×': '&times;', 'Ø': '&Oslash;', 'Ù': '&Ugrave;', 'Ú': '&Uacute;', 'Û': '&Ucirc;', 'Ü': '&Uuml;', 'Ý': '&Yacute;', 'Þ': '&THORN;', 'ß': '&szlig;', 'à': '&agrave;', 'á': '&aacute;', 'â': '&acirc;', 'ã': '&atilde;', 'ä': '&auml;', 'å': '&aring;', 'æ': '&aelig;', 'ç': '&ccedil;', 'è': '&egrave;', 'é': '&eacute;', 'ê': '&ecirc;', 'ë': '&euml;', 'ì': '&igrave;', 'í': '&iacute;', 'î': '&icirc;', 'ï': '&iuml;', 'ð': '&eth;', 'ñ': '&ntilde;', 'ò': '&ograve;', 'ó': '&oacute;', 'ô': '&ocirc;', 'õ': '&otilde;', 'ö': '&ouml;', '÷': '&divide;', 'ø': '&oslash;', 'ù': '&ugrave;', 'ú': '&uacute;', 'û': '&ucirc;', 'ü': '&uuml;', 'ý': '&yacute;', 'þ': '&thorn;', 'ÿ': '&yuml;', '∞': '&infin;'}
-    for i in sp_char:
-        act=act.replace(i.encode('utf-8'),sp_char[i].encode('utf-8'))
+    failattemtmsg=b"\r\nHTTP/1.1 200 OK\r\n\r\n<h1>Web Application Firewall Detected Suspecious activity !!</h1>\r\n"
     
-     #SQL Injection WAF Rules
-    act1=act.upper()
-    zw=[ b'%2BAND%28UNION', b'%2BAND%2BUNION%28', b'UNION%2BSELECT', b'||%2B%28SELECT', b'||%2BSUBSTR(', b'+AND+UNION', b'+AND+UNION(', b'UNION+SELECT', b'||+(SELECT', b'||+SUBSTR(' ,b' AND UNION', b' AND UNION(', b'UNION SELECT', b'|| (SELECT', b'|| SUBSTR(' ]
-    for qw in zw:
-        if qw in act1 :
-            conn.send(failattemtmsg)
-            conn.close()
-            infoOut("SQL Injection",first_line,client_addr)
-            open('intrusion.log','a+').write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act)+"\n")
-            sys.exit(1)
+    ###################################################
+    ###############Apply WAF rules START###############
+    ###################################################
 
-    first_line1=first_line.upper()
-    for qw in zw:
-        if qw in first_line1 :
-            conn.send(failattemtmsg)
+    # check Country Blocking START
+    try:
+        if ipdetails['countryCode'] in BLOCKED_COUNTRY:
+            infoOut("[BLOCKED]Country Blocked("+ipdetails['country']+")",first_line,client_addr)
+            conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n')
             conn.close()
-            infoOut("SQL Injection",first_line,client_addr)
-            open('intrusion.log','a+').write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
             sys.exit(1)
+    except  Exception as ex:
+        print("Country check Failed !",ex)
+    # check Country Blocking END
+
+    # check PROXY IPs START
+    try:
+        if ipdetails['proxy']=='true' and PROXY_BLOCK:
+            infoOut("[BLOCKED]PROXY IP",first_line,client_addr)
+            conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service can not be used with proxy !!</h1>\r\n')
+            conn.close()
+            sys.exit(1)
+    except Exception as ex:
+        print("Proxy IP check Failed !",ex)
+    # check PROXY IPs END
+
+    # check BLOCKED IPs START
+    try:
+        if client_addr[0] in BLOCKED_CLIENTS:
+            infoOut("[BLOCKED]IP Blacklisted",first_line,client_addr)
+            conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n')
+            conn.close()
+            sys.exit(1)
+    except Exception as ex:
+        print("Blocked IP check Failed !",ex)
+    # check BLOCKED IPs END
+
+    #special Character Sanitisation START
+    try:
+        sp_char={'‘': '&lsquo;',"'":'&rsquo' ,'’': '&rsquo;', '‚': '&sbquo;','"': '&ldquo;', '“': '&ldquo;', '”': '&rdquo;', '„': '&bdquo;', '†': '&dagger;', '‡': '&Dagger;', '‰': '&permil;', '‹': '&lsaquo;', '›': '&rsaquo;', '♠': '&spades;', '♣': '&clubs;', '♥': '&hearts;', '♦': '&diams;', '‾': '&oline;', '←': '&larr;', '↑': '&uarr;', '→': '&rarr;', '↓': '&darr;', '↖': '&nwarr;', '↗': '&nearr;', '↙': '&swarr;', '↘': '&searr;', '™': '&trade;', '/': '&frasl;', '<': '&lt;', '>': '&gt;', '…': '&hellip;', '–': '&ndash;', '—': '&mdash;', '¡': '&iexcl;', '¢': '&cent;', '£': '&pound;', '¤': '&curren;', '¥': '&yen;', '¦': '&brvbar; or &brkbar;', '§': '&sect;', '¨': '&uml; or &die;', '©': '&copy;', 'ª': '&ordf;', '«': '&laquo;', '\xad': '&shy;', '®': '&reg;', '¯': '&macr; or &hibar;', '°': '&deg;', '±': '&plusmn;', '²': '&sup2;', '³': '&sup3;', '´': '&acute;', 'µ': '&micro;', '¶': '&para;', '·': '&middot;', '¸': '&cedil;', '¹': '&sup1;', 'º': '&ordm;', '»': '&raquo;', '¼': '&frac14;', '½': '&frac12;', '¾': '&frac34;', '¿': '&iquest;', 'À': '&Agrave;', 'Á': '&Aacute;', 'Â': '&Acirc;', 'Ã': '&Atilde;', 'Ä': '&Auml;', 'Å': '&Aring;', 'Æ': '&AElig;', 'Ç': '&Ccedil;', 'È': '&Egrave;', 'É': '&Eacute;', 'Ê': '&Ecirc;', 'Ë': '&Euml;', 'Ì': '&Igrave;', 'Í': '&Iacute;', 'Î': '&Icirc;', 'Ï': '&Iuml;', 'Ð': '&ETH;', 'Ñ': '&Ntilde;', 'Ò': '&Ograve;', 'Ó': '&Oacute;', 'Ô': '&Ocirc;', 'Õ': '&Otilde;', 'Ö': '&Ouml;', '×': '&times;', 'Ø': '&Oslash;', 'Ù': '&Ugrave;', 'Ú': '&Uacute;', 'Û': '&Ucirc;', 'Ü': '&Uuml;', 'Ý': '&Yacute;', 'Þ': '&THORN;', 'ß': '&szlig;', 'à': '&agrave;', 'á': '&aacute;', 'â': '&acirc;', 'ã': '&atilde;', 'ä': '&auml;', 'å': '&aring;', 'æ': '&aelig;', 'ç': '&ccedil;', 'è': '&egrave;', 'é': '&eacute;', 'ê': '&ecirc;', 'ë': '&euml;', 'ì': '&igrave;', 'í': '&iacute;', 'î': '&icirc;', 'ï': '&iuml;', 'ð': '&eth;', 'ñ': '&ntilde;', 'ò': '&ograve;', 'ó': '&oacute;', 'ô': '&ocirc;', 'õ': '&otilde;', 'ö': '&ouml;', '÷': '&divide;', 'ø': '&oslash;', 'ù': '&ugrave;', 'ú': '&uacute;', 'û': '&ucirc;', 'ü': '&uuml;', 'ý': '&yacute;', 'þ': '&thorn;', 'ÿ': '&yuml;', '∞': '&infin;'}
+        for i in sp_char:
+            act=act.replace(i.encode('utf-8'),sp_char[i].encode('utf-8'))
+    except  Exception as ex:
+        print("Special Character Sanitization Failed !",ex)
+    #special Character Sanitisation END
     
-    sta=sta.replace(b'&frasl;',b'/')
-    request=sta+act
+    #SQL Injection Check START
+    try:
+        act1=act.upper()
+        zw=SQL_Injection_Rules
+        for qw in zw:
+            if qw in act1 :
+                conn.send(failattemtmsg)
+                conn.close()
+                infoOut("[BLOCKED]SQL Injection",first_line,client_addr)
+                open('intrusion.log','a+').write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act)+"\n")
+                sys.exit(1)
 
-    # check client BLOCKED_CLIENTS or not
-    if client_addr[0] in BLOCKED_CLIENTS:
-        infoOut("IP Blacklisted",first_line,client_addr)
-        conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\nIP Blacklisted !!\r\n')
-        conn.close()
-        sys.exit(1)
+        first_line1=first_line.upper()
+        for qw in zw:
+            if qw in first_line1 :
+                conn.send(failattemtmsg)
+                conn.close()
+                infoOut("[BLOCKED]SQL Injection",first_line,client_addr)
+                open('intrusion.log','a+').write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
+                sys.exit(1)
+        
+        sta=sta.replace(b'&frasl;',b'/')
+        request=sta+act
+    except  Exception as ex:
+        print("SQL Injection Check Failed !",ex)
+    #SQL Injection Check END
 
-    infoOut("Request",first_line,client_addr)
+    #Intelligent Request Testing START (PENDING)
+    try:
+        if INTELLIGENT_REQ_TEST:
+            ##pass request to machine learning model for testing
+            pass
+    except  Exception as ex:
+        print('Failed Intelligent Request Testing !', ex)
+    #Intelligent Request Testing END
+
+
+    ###################################################
+    ###############Apply WAF rules END#################
+    ###################################################
+
+    # LOGGING START
+    try:
+        if ipdetails['status']=='fail':z=""
+        else:
+            z=" Country : "+ipdetails['country']+" ("+ipdetails['regionName']+")"
+            if ipdetails['proxy']=='true':z+=" [PROXY]"
+        cadd=[]
+        cadd.append(client_addr[0])
+        cadd[0]+=z
+        infoOut("Request",first_line,cadd)
+    except:
+        print("Logging Failed !")
+    # LOGGING END
+    
+    #Web Application address
     webserver = "online.hnbgu.ac.in"
+    #Web Application port
     port = 80
     if port!=80:port1=":"+str(port)
     else:port1=''
@@ -68,8 +170,8 @@ def prthread(conn, client_addr):
         request=request.replace(second_line,(webserver+str(port1)).encode('utf-8'))
     except:
         pass
-       
 
+    #WEB APPLICATION SOCKET
     try:
         # web application connection Socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
@@ -94,23 +196,45 @@ def prthread(conn, client_addr):
         infoOut("Session Reset",first_line,client_addr)
         sys.exit(1)
 
+#Output info if DEBUG true and color code as per rule hitted
 def infoOut(rtyp,request,rfrom):
     if DEBUG:
-        if "IP Blacklist" in rtyp:clr = 33
-        elif "Request" in rtyp:clr = 34
-        elif "SQL Injection" in rtyp: clr=31
+        if "Request" in rtyp:clr = 34
+        elif "[BLOCKED]IP Blacklist" in rtyp:clr = 33
+        elif "[BLOCKED]SQL Injection" in rtyp: clr=31
+        elif "[BLOCKED]PROXY IP" in rtyp: clr=32
+        elif "[BLOCKED]Country Blocked" in rtyp: clr=32
         else:clr=30
-        print ("\033["+str(clr)+"m",rfrom[0],"\t",rtyp,"\t",request,"\033[0m")
+        trace ("\033["+str(clr)+"m"+str(rfrom[0])+"\t"+str(rtyp)+"\t"+str(request)+"\033[0m")
 
+#Output on DEBUG true
+def trace(s):
+    if DEBUG:
+        print(s)
+
+#main function defination
 def main():
-    #check arguments
-    if (len(sys.argv)<2):
+    #argument list length
+    argl=len(sys.argv)
+
+    if argl<2:
         port = 8080 #default Port
-        print ("No port arguement Now using port=8080")
-    if (len(sys.argv)>1):
+        trace ("No port arguement Now using port=8080")
+    
+    #set port given in argument
+    if argl>1:
         #Check PORT
-        port = int(sys.argv[1])
-    if (len(sys.argv)==3):
+        try:
+            port = int(sys.argv[1])
+        except:
+            print("Unknown arguemt at :",sys.argv[1])
+            exit()
+        if port<80:
+            print("Given port is less than 80 : ",sys.argv[1],'\nProvide other port')
+            exit()
+
+    #set DEBUG if given in arguement   
+    if argl>2:
         #Check DEBUG Flag
         if str(sys.argv[2]).upper()=="DEBUG":
             global DEBUG
@@ -121,6 +245,8 @@ def main():
     try:
         # create a socket
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        # set address and port reuse
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         # bind the socket to host and port
         s.bind((host, port))
         # start listening
@@ -129,7 +255,7 @@ def main():
     except socket.error as e:
         if s:
             s.close()
-        print ("Error while opening socket : ", e)
+        trace ("Error while opening socket : "+ str(e))
         sys.exit(1)
 
     # connections from client
@@ -140,4 +266,8 @@ def main():
     s.close()
     
 if __name__ == '__main__':
-    main()
+    try:
+      main()
+    except KeyboardInterrupt:
+      sys.exit(0)
+      pass
