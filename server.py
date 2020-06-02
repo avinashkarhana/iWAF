@@ -3,26 +3,30 @@ import socket
 import _thread as thread
 import requests
 import json
+import sqlite3
+import time
 
 ####################################################################
 ####################### Default Configuration START#################
 ####################################################################
 
-DEBUG = True                 # debug mode to see all debug messages
+DEBUG = False                # debug mode to see all debug messages
 OnlyAllowedIP = False        # Check for only allowed clients rule
 ALLOWED_CLIENTS = []         # Allowed Clients
-BLOCKED_CLIENTS = ['192.168.43.2']         # BLOCKED clients
+BLOCKED_CLIENTS = []         # BLOCKED clients
 REQUEST_HOLD = 50            # number connections to hold
 MAX_RCV = 999999             # max number data bytes to receive
-PROXY_BLOCK = True           # Block access through known Web Proxy or VPN
+PROXY_BLOCK = False           # Block access through known Web Proxy or VPN
 INTELLIGENT_REQ_TEST = False # Intelligent request testing via Machine Learning (Increases Response time!)
-BLOCKED_COUNTRY = ['IN']     # Blocked Access in specific countries via IP geo location
+OnlyAllowedIP = False        # Check for only allowed countries rule
+ALLOWED_COUNTRIES = []       # Allowed Access in specific countries via IP geo location
+BLOCKED_COUNTRY = []         # Blocked Access in specific countries via IP geo location
 
 ####################################################################
 ####################### Default Configuration END###################
 ####################################################################
 
-Special_Chars_HTML_code={ '"':"&quot;","'":"&apos;","&":"&amp;","<":"&lt;",">":"&gt;","Œ":"&OElig;","œ":"&oelig;","Š":"&Scaron;","š":"&scaron;","Ÿ":"&Yuml;","ƒ":"&fnof;","ˆ":"&circ;","˜":"&tilde;"," ":"&ensp;"," ":"&emsp;"," ":"&thinsp;","‌":"&zwnj;","‍":"&zwj;","‎":"&lrm;","‏":"&rlm;","–":"&ndash;","—":"&mdash;","‘":"&lsquo;","’":"&rsquo;","‚":"&sbquo;","“":"&ldquo;","”":"&rdquo;","„":"&bdquo;","†":"&dagger;","‡":"&Dagger;","•":"&bull;","…":"&hellip;","‰":"&permil;","′":"&prime;","″":"&Prime;","‹":"&lsaquo;","›":"&rsaquo;","‾":"&oline;","€":"&euro;","™":"&trade;","←":"&larr;","↑":"&uarr;","→":"&rarr;","↓":"&darr;","↔":"&harr;","↵":"&crarr;","⌈":"&lceil;","⌉":"&rceil;","⌊":"&lfloor;","⌋":"&rfloor;","◊":"&loz;","♠":"&spades;","♣":"&clubs;","♥":"&hearts;","♦":"&diams;","∀":"&forall;","∂":"&part;","∃":"&exist;","∅":"&empty;","∇":"&nabla;","∈":"&isin;","∉":"&notin;","∋":"&ni;","∏":"&prod;","∑":"&sum;","−":"&minus;","∗":"&lowast;","√":"&radic;","∝":"&prop;","∞":"&infin;","∠":"&ang;","∧":"&and;","∨":"&or;","∩":"&cap;","∪":"&cup;","∫":"&int;","∴":"&there4;","∼":"&sim;","≅":"&cong;","≈":"&asymp;","≠":"&ne;","≡":"&equiv;","≤":"&le;","≥":"&ge;","⊂":"&sub;","⊃":"&sup;","⊄":"&nsub;","⊆":"&sube;","⊇":"&supe;","⊕":"&oplus;","⊗":"&otimes;","⊥":"&perp;","⋅":"&sdot;","Α":"&Alpha;","Β":"&Beta;","Γ":"&Gamma;","Δ":"&Delta;","Ε":"&Epsilon;","Ζ":"&Zeta;","Η":"&Eta;","Θ":"&Theta;","Ι":"&Iota;","Κ":"&Kappa;","Λ":"&Lambda;","Μ":"&Mu;","Ν":"&Nu;","Ξ":"&Xi;","Ο":"&Omicron;","Π":"&Pi;","Ρ":"&Rho;","Σ":"&Sigma;","Τ":"&Tau;","Υ":"&Upsilon;","Φ":"&Phi;","Χ":"&Chi;","Ψ":"&Psi;","Ω":"&Omega;","α":"&alpha;","β":"&beta;","γ":"&gamma;","δ":"&delta;","ε":"&epsilon;","ζ":"&zeta;","η":"&eta;","θ":"&theta;","ι":"&iota;","κ":"&kappa;","λ":"&lambda;","μ":"&mu;","ν":"&nu;","ξ":"&xi;","ο":"&omicron;","π":"&pi;","ρ":"&rho;","ς":"&sigmaf;","σ":"&sigma;","τ":"&tau;","υ":"&upsilon;","φ":"&phi;","χ":"&chi;","ψ":"&psi;","ω":"&omega;","ϑ":"&thetasym;","ϒ":"&upsih;","ϖ":"&piv;","À":"&Agrave;","Á":"&Aacute;","Â":"&Acirc;","Ã":"&Atilde;","Ä":"&Auml;","Å":"&Aring;","Æ":"&AElig;","Ç":"&Ccedil;","È":"&Egrave;","É":"&Eacute;","Ê":"&Ecirc;","Ë":"&Euml;","Ì":"&Igrave;","Í":"&Iacute;","Î":"&Icirc;","Ï":"&Iuml;","Ð":"&ETH;","Ñ":"&Ntilde;","Ò":"&Ograve;","Ó":"&Oacute;","Ô":"&Ocirc;","Õ":"&Otilde;","Ö":"&Ouml;","Ø":"&Oslash;","Ù":"&Ugrave;","Ú":"&Uacute;","Û":"&Ucirc;","Ü":"&Uuml;","Ý":"&Yacute;","Þ":"&THORN;","ß":"&szlig;","à":"&agrave;","á":"&aacute;","â":"&acirc;","ã":"&atilde;","ä":"&auml;","å":"&aring;","æ":"&aelig;","è":"&egrave;","é":"&eacute;","ê":"&ecirc;","ë":"&euml;","ì":"&igrave;","í":"&iacute;","î":"&icirc;","ï":"&iuml;","ð":"&eth;","ñ":"&ntilde;","ò":"&ograve;","ó":"&oacute;","ô":"&ocirc;","õ":"&otilde;","ö":"&ouml;","ø":"&oslash;","ù":"&ugrave;","ú":"&uacute;","û":"&ucirc;","ü":"&uuml;","ý":"&yacute;","þ":"&thorn;","ÿ":"&yuml;","¡":"&iexcl;","¢":"&cent;","¥":"&yen;","§":"&sect;","©":"&copy;","ª":"&ordf;","«":"&laquo;","¬":"&not;","®":"&reg;","¯":"&macr;","°":"&deg;","±":"&plusmn;","²":"&sup2;","³":"&sup3;","´":"&acute;","µ":"&micro;","¶":"&para;","·":"&middot;","¸":"&cedil;","¹":"&sup1;","º":"&ordm;","»":"&raquo;","¼":"&frac14;","½":"&frac12;","¾":"&frac34;","¿":"&iquest;","×":"&times;","÷":"&divide;"}
+Special_Chars_HTML_code={ "(":"&#40;",")":"&#41;",'"':"&quot;","'":"&apos;","&":"&amp;","<":"&lt;",">":"&gt;","Œ":"&OElig;","œ":"&oelig;","Š":"&Scaron;","š":"&scaron;","Ÿ":"&Yuml;","ƒ":"&fnof;","ˆ":"&circ;","˜":"&tilde;"," ":"&ensp;"," ":"&emsp;"," ":"&thinsp;","‌":"&zwnj;","‍":"&zwj;","‎":"&lrm;","‏":"&rlm;","–":"&ndash;","—":"&mdash;","‘":"&lsquo;","’":"&rsquo;","‚":"&sbquo;","“":"&ldquo;","”":"&rdquo;","„":"&bdquo;","†":"&dagger;","‡":"&Dagger;","•":"&bull;","…":"&hellip;","‰":"&permil;","′":"&prime;","″":"&Prime;","‹":"&lsaquo;","›":"&rsaquo;","‾":"&oline;","€":"&euro;","™":"&trade;","←":"&larr;","↑":"&uarr;","→":"&rarr;","↓":"&darr;","↔":"&harr;","↵":"&crarr;","⌈":"&lceil;","⌉":"&rceil;","⌊":"&lfloor;","⌋":"&rfloor;","◊":"&loz;","♠":"&spades;","♣":"&clubs;","♥":"&hearts;","♦":"&diams;","∀":"&forall;","∂":"&part;","∃":"&exist;","∅":"&empty;","∇":"&nabla;","∈":"&isin;","∉":"&notin;","∋":"&ni;","∏":"&prod;","∑":"&sum;","−":"&minus;","∗":"&lowast;","√":"&radic;","∝":"&prop;","∞":"&infin;","∠":"&ang;","∧":"&and;","∨":"&or;","∩":"&cap;","∪":"&cup;","∫":"&int;","∴":"&there4;","∼":"&sim;","≅":"&cong;","≈":"&asymp;","≠":"&ne;","≡":"&equiv;","≤":"&le;","≥":"&ge;","⊂":"&sub;","⊃":"&sup;","⊄":"&nsub;","⊆":"&sube;","⊇":"&supe;","⊕":"&oplus;","⊗":"&otimes;","⊥":"&perp;","⋅":"&sdot;","Α":"&Alpha;","Β":"&Beta;","Γ":"&Gamma;","Δ":"&Delta;","Ε":"&Epsilon;","Ζ":"&Zeta;","Η":"&Eta;","Θ":"&Theta;","Ι":"&Iota;","Κ":"&Kappa;","Λ":"&Lambda;","Μ":"&Mu;","Ν":"&Nu;","Ξ":"&Xi;","Ο":"&Omicron;","Π":"&Pi;","Ρ":"&Rho;","Σ":"&Sigma;","Τ":"&Tau;","Υ":"&Upsilon;","Φ":"&Phi;","Χ":"&Chi;","Ψ":"&Psi;","Ω":"&Omega;","α":"&alpha;","β":"&beta;","γ":"&gamma;","δ":"&delta;","ε":"&epsilon;","ζ":"&zeta;","η":"&eta;","θ":"&theta;","ι":"&iota;","κ":"&kappa;","λ":"&lambda;","μ":"&mu;","ν":"&nu;","ξ":"&xi;","ο":"&omicron;","π":"&pi;","ρ":"&rho;","ς":"&sigmaf;","σ":"&sigma;","τ":"&tau;","υ":"&upsilon;","φ":"&phi;","χ":"&chi;","ψ":"&psi;","ω":"&omega;","ϑ":"&thetasym;","ϒ":"&upsih;","ϖ":"&piv;","À":"&Agrave;","Á":"&Aacute;","Â":"&Acirc;","Ã":"&Atilde;","Ä":"&Auml;","Å":"&Aring;","Æ":"&AElig;","Ç":"&Ccedil;","È":"&Egrave;","É":"&Eacute;","Ê":"&Ecirc;","Ë":"&Euml;","Ì":"&Igrave;","Í":"&Iacute;","Î":"&Icirc;","Ï":"&Iuml;","Ð":"&ETH;","Ñ":"&Ntilde;","Ò":"&Ograve;","Ó":"&Oacute;","Ô":"&Ocirc;","Õ":"&Otilde;","Ö":"&Ouml;","Ø":"&Oslash;","Ù":"&Ugrave;","Ú":"&Uacute;","Û":"&Ucirc;","Ü":"&Uuml;","Ý":"&Yacute;","Þ":"&THORN;","ß":"&szlig;","à":"&agrave;","á":"&aacute;","â":"&acirc;","ã":"&atilde;","ä":"&auml;","å":"&aring;","æ":"&aelig;","è":"&egrave;","é":"&eacute;","ê":"&ecirc;","ë":"&euml;","ì":"&igrave;","í":"&iacute;","î":"&icirc;","ï":"&iuml;","ð":"&eth;","ñ":"&ntilde;","ò":"&ograve;","ó":"&oacute;","ô":"&ocirc;","õ":"&otilde;","ö":"&ouml;","ø":"&oslash;","ù":"&ugrave;","ú":"&uacute;","û":"&ucirc;","ü":"&uuml;","ý":"&yacute;","þ":"&thorn;","ÿ":"&yuml;","¡":"&iexcl;","¢":"&cent;","¥":"&yen;","§":"&sect;","©":"&copy;","ª":"&ordf;","«":"&laquo;","¬":"&not;","®":"&reg;","¯":"&macr;","°":"&deg;","±":"&plusmn;","²":"&sup2;","³":"&sup3;","´":"&acute;","µ":"&micro;","¶":"&para;","·":"&middot;","¸":"&cedil;","¹":"&sup1;","º":"&ordm;","»":"&raquo;","¼":"&frac14;","½":"&frac12;","¾":"&frac34;","¿":"&iquest;","×":"&times;","÷":"&divide;"}
 ipdetailFileds=["status","message","country","countryCode","region","regionName","city","district","zip","lat","lon","timezone","currency","isp","org","as","mobile","proxy","hosting"]
 SQL_Injection_Rules=[ b'%2BAND%28UNION', b'%2BAND%2BUNION%28', b'UNION%2BSELECT', b'||%2B%28SELECT', b'||%2BSUBSTR(', b'+AND+UNION', b'+AND+UNION(', b'UNION+SELECT', b'||+(SELECT', b'||+SUBSTR(' ,b' AND UNION', b' AND UNION(', b'UNION SELECT', b'UNION%20SELECT', b'|| (SELECT', b'|| SUBSTR(' ]
 ipcache={}
@@ -37,7 +41,7 @@ def ipinfo(ip):
         resp=ipcache[ip]
     return(resp)
 
-#working thread
+#working thread START
 def prthread(conn, client_addr):
     # get client IP Info
     ipdetails=ipinfo(str(client_addr[0]))
@@ -63,17 +67,25 @@ def prthread(conn, client_addr):
     ###############Apply WAF rules START###############
     ###################################################
 
-    # check Country Blocking START
+    # Country based filtering START
     try:
-        if ipdetails['countryCode'] in BLOCKED_COUNTRY:
-            infoOut("[BLOCKED]Country Blocked("+ipdetails['country']+")",first_line,client_addr)
-            conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n')
-            conn.close()
-            try:sys.exit(1)
-            except:pass
+        if OnlyAllowedCountries:
+            if ipdetails['countryCode'] not in ALLOWED_COUNTRIES:
+                infoOut("[BLOCKED]Country Blocked("+ipdetails['country']+")",first_line,client_addr)
+                conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n')
+                conn.close()
+                try:sys.exit(1)
+                except:pass
+        else:
+            if ipdetails['countryCode'] in BLOCKED_COUNTRY:
+                infoOut("[BLOCKED]Country Blocked("+ipdetails['country']+")",first_line,client_addr)
+                conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n')
+                conn.close()
+                try:sys.exit(1)
+                except:pass
     except:
-        print("Country check Failed !")
-    # check Country Blocking END
+        print("Country based filtering Failed !")
+    # Country based filtering END
 
     # check PROXY IPs START
     try:
@@ -211,6 +223,74 @@ def prthread(conn, client_addr):
         infoOut("Session Reset",first_line,client_addr)
         try:sys.exit(1)
         except:pass
+# working thread END
+
+def dbthread(arg):
+    profid=arg
+    #creating connection to Sqlite3 Database
+    conn = sqlite3.connect('waf.db')
+    c = conn.cursor()
+    while True:
+        if profid==None:
+            profid=(1,)
+        try:
+            profile=c.execute("SELECT * FROM wafrules WHERE profID=?",profid)[0]
+            #check for OnlyaAllowedIP flag
+            if profile['onlyallowedip']==1:
+                global OnlyAllowedIP
+                global ALLOWED_CLIENTS
+                OnlyAllowedIP = True
+                #update ALLOWED_CLIENTS list as per profile
+                ALLOWED_CLIENTS += list(c.execute("SELECT ip FROM ipclients WHERE status='allow' AND profID=?",profid))
+            else:
+                OnlyAllowedIP = False
+
+            #check for OnlyaAllowedCountry flag
+            if profile['onlyallowedcountries']==1:
+                global OnlyAllowedCountries
+                global ALLOWED_COUNTRIES
+                OnlyAllowedCountries = True
+                #update ALLOWED_CLIENTS list as per profile
+                ALLOWED_COUNTRIES += list(c.execute("SELECT ip FROM countryrule WHERE status='allow' AND profID=?",profid))
+            else:
+                OnlyAllowedCountries = False
+
+            #check for Proxy Block flag
+            if profile['proxyblock']==1:
+                global PROXY_BLOCK
+                PROXY_BLOCK = True
+            else:
+                PROXY_BLOCK = False
+
+            #check for intelligent test flag
+            if profile['intelligenttest']==1:
+                global INTELLIGENT_REQ_TEST
+                INTELLIGENT_REQ_TEST = True
+            else:
+                INTELLIGENT_REQ_TEST = False
+            
+            #set number of request to hold
+            global REQUEST_HOLD
+            REQUEST_HOLD = int(profile['requesthold'])
+
+            #set max request size
+            global MAX_RCV
+            MAX_RCV = int(profile['maxrcv'])
+
+            #check for BLOCKED CLIENTS
+            global BLOCKED_CLIENTS
+            BLOCKED_CLIENTS += list(c.execute("SELECT ip FROM ipclients WHERE status='block' AND profID=?",profid))
+
+            #check blocked Countries
+            global BLOCKED_COUNTRY
+            BLOCKED_COUNTRY += list(c.execute("SELECT ip FROM countryrule WHERE status='block' AND profID=?",profid))
+        except:
+            profid=profid=(1,)
+            print('No Such profile as',profid,"Using Default profile !")
+        time.sleep(3)
+
+    conn.commit()
+    conn.close()
 
 #Output info if DEBUG true and color code as per rule hitted
 def infoOut(rtyp,request,rfrom):
@@ -235,6 +315,9 @@ def main():
 
     if argl<2:
         port = 8080 #default Port
+        if str(input("No arguements provided !\nEnter 'yes' if you want to continue with default configuration: ")).lower()!='yes':
+            print("Usage ")
+            exit()
         trace ("No port arguement Now using port=8080")
     
     #set port given in argument
@@ -255,7 +338,24 @@ def main():
         if str(sys.argv[2]).upper()=="DEBUG":
             global DEBUG
             DEBUG=True
+        else:
+            print("Debug disabled as Second arguement provided is not DEBUG")
     
+    #set profile for rules
+    if argl>3:
+        try:
+            profileID = (int(sys.argv[3]),)
+        except:
+            profileID = None
+            print('Invalid ProfileID given in argument',sys.argv[3])
+            print('Using Default profile')
+
+    # start thread to get updates from database
+    try:
+        thread.start_new_thread(dbthread,profileID)
+    except:
+        print("Could not start thread for database Updates!\n#########Running on in-file rules !#########")
+
     host = ''
     print ("WAF Server Running on ",host,":",port)
 
