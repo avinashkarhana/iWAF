@@ -9,6 +9,8 @@ import json
 ####################################################################
 
 DEBUG = True                 # debug mode to see all debug messages
+OnlyAllowedIP = False        # Check for only allowed clients rule
+ALLOWED_CLIENTS = []         # Allowed Clients
 BLOCKED_CLIENTS = ['192.168.43.2']         # BLOCKED clients
 REQUEST_HOLD = 50            # number connections to hold
 MAX_RCV = 999999             # max number data bytes to receive
@@ -19,6 +21,7 @@ BLOCKED_COUNTRY = ['IN']     # Blocked Access in specific countries via IP geo l
 ####################################################################
 ####################### Default Configuration END###################
 ####################################################################
+
 Special_Chars_HTML_code={ '"':"&quot;","'":"&apos;","&":"&amp;","<":"&lt;",">":"&gt;","Œ":"&OElig;","œ":"&oelig;","Š":"&Scaron;","š":"&scaron;","Ÿ":"&Yuml;","ƒ":"&fnof;","ˆ":"&circ;","˜":"&tilde;"," ":"&ensp;"," ":"&emsp;"," ":"&thinsp;","‌":"&zwnj;","‍":"&zwj;","‎":"&lrm;","‏":"&rlm;","–":"&ndash;","—":"&mdash;","‘":"&lsquo;","’":"&rsquo;","‚":"&sbquo;","“":"&ldquo;","”":"&rdquo;","„":"&bdquo;","†":"&dagger;","‡":"&Dagger;","•":"&bull;","…":"&hellip;","‰":"&permil;","′":"&prime;","″":"&Prime;","‹":"&lsaquo;","›":"&rsaquo;","‾":"&oline;","€":"&euro;","™":"&trade;","←":"&larr;","↑":"&uarr;","→":"&rarr;","↓":"&darr;","↔":"&harr;","↵":"&crarr;","⌈":"&lceil;","⌉":"&rceil;","⌊":"&lfloor;","⌋":"&rfloor;","◊":"&loz;","♠":"&spades;","♣":"&clubs;","♥":"&hearts;","♦":"&diams;","∀":"&forall;","∂":"&part;","∃":"&exist;","∅":"&empty;","∇":"&nabla;","∈":"&isin;","∉":"&notin;","∋":"&ni;","∏":"&prod;","∑":"&sum;","−":"&minus;","∗":"&lowast;","√":"&radic;","∝":"&prop;","∞":"&infin;","∠":"&ang;","∧":"&and;","∨":"&or;","∩":"&cap;","∪":"&cup;","∫":"&int;","∴":"&there4;","∼":"&sim;","≅":"&cong;","≈":"&asymp;","≠":"&ne;","≡":"&equiv;","≤":"&le;","≥":"&ge;","⊂":"&sub;","⊃":"&sup;","⊄":"&nsub;","⊆":"&sube;","⊇":"&supe;","⊕":"&oplus;","⊗":"&otimes;","⊥":"&perp;","⋅":"&sdot;","Α":"&Alpha;","Β":"&Beta;","Γ":"&Gamma;","Δ":"&Delta;","Ε":"&Epsilon;","Ζ":"&Zeta;","Η":"&Eta;","Θ":"&Theta;","Ι":"&Iota;","Κ":"&Kappa;","Λ":"&Lambda;","Μ":"&Mu;","Ν":"&Nu;","Ξ":"&Xi;","Ο":"&Omicron;","Π":"&Pi;","Ρ":"&Rho;","Σ":"&Sigma;","Τ":"&Tau;","Υ":"&Upsilon;","Φ":"&Phi;","Χ":"&Chi;","Ψ":"&Psi;","Ω":"&Omega;","α":"&alpha;","β":"&beta;","γ":"&gamma;","δ":"&delta;","ε":"&epsilon;","ζ":"&zeta;","η":"&eta;","θ":"&theta;","ι":"&iota;","κ":"&kappa;","λ":"&lambda;","μ":"&mu;","ν":"&nu;","ξ":"&xi;","ο":"&omicron;","π":"&pi;","ρ":"&rho;","ς":"&sigmaf;","σ":"&sigma;","τ":"&tau;","υ":"&upsilon;","φ":"&phi;","χ":"&chi;","ψ":"&psi;","ω":"&omega;","ϑ":"&thetasym;","ϒ":"&upsih;","ϖ":"&piv;","À":"&Agrave;","Á":"&Aacute;","Â":"&Acirc;","Ã":"&Atilde;","Ä":"&Auml;","Å":"&Aring;","Æ":"&AElig;","Ç":"&Ccedil;","È":"&Egrave;","É":"&Eacute;","Ê":"&Ecirc;","Ë":"&Euml;","Ì":"&Igrave;","Í":"&Iacute;","Î":"&Icirc;","Ï":"&Iuml;","Ð":"&ETH;","Ñ":"&Ntilde;","Ò":"&Ograve;","Ó":"&Oacute;","Ô":"&Ocirc;","Õ":"&Otilde;","Ö":"&Ouml;","Ø":"&Oslash;","Ù":"&Ugrave;","Ú":"&Uacute;","Û":"&Ucirc;","Ü":"&Uuml;","Ý":"&Yacute;","Þ":"&THORN;","ß":"&szlig;","à":"&agrave;","á":"&aacute;","â":"&acirc;","ã":"&atilde;","ä":"&auml;","å":"&aring;","æ":"&aelig;","è":"&egrave;","é":"&eacute;","ê":"&ecirc;","ë":"&euml;","ì":"&igrave;","í":"&iacute;","î":"&icirc;","ï":"&iuml;","ð":"&eth;","ñ":"&ntilde;","ò":"&ograve;","ó":"&oacute;","ô":"&ocirc;","õ":"&otilde;","ö":"&ouml;","ø":"&oslash;","ù":"&ugrave;","ú":"&uacute;","û":"&ucirc;","ü":"&uuml;","ý":"&yacute;","þ":"&thorn;","ÿ":"&yuml;","¡":"&iexcl;","¢":"&cent;","¥":"&yen;","§":"&sect;","©":"&copy;","ª":"&ordf;","«":"&laquo;","¬":"&not;","®":"&reg;","¯":"&macr;","°":"&deg;","±":"&plusmn;","²":"&sup2;","³":"&sup3;","´":"&acute;","µ":"&micro;","¶":"&para;","·":"&middot;","¸":"&cedil;","¹":"&sup1;","º":"&ordm;","»":"&raquo;","¼":"&frac14;","½":"&frac12;","¾":"&frac34;","¿":"&iquest;","×":"&times;","÷":"&divide;"}
 ipdetailFileds=["status","message","country","countryCode","region","regionName","city","district","zip","lat","lon","timezone","currency","isp","org","as","mobile","proxy","hosting"]
 SQL_Injection_Rules=[ b'%2BAND%28UNION', b'%2BAND%2BUNION%28', b'UNION%2BSELECT', b'||%2B%28SELECT', b'||%2BSUBSTR(', b'+AND+UNION', b'+AND+UNION(', b'UNION+SELECT', b'||+(SELECT', b'||+SUBSTR(' ,b' AND UNION', b' AND UNION(', b'UNION SELECT', b'UNION%20SELECT', b'|| (SELECT', b'|| SUBSTR(' ]
@@ -84,17 +87,25 @@ def prthread(conn, client_addr):
         print("Proxy IP check Failed !")
     # check PROXY IPs END
 
-    # check BLOCKED IPs START
+    # IP Based Filtering START
     try:
-        if client_addr[0] in BLOCKED_CLIENTS:
-            infoOut("[BLOCKED]IP Blacklisted",first_line,client_addr)
-            conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n')
-            conn.close()
-            try:sys.exit(1)
-            except:pass
+        if OnlyAllowedIP:
+            if client_addr[0] not in ALLOWED_CLIENTS:
+                infoOut("[BLOCKED]IP Blacklisted",first_line,client_addr)
+                conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n')
+                conn.close()
+                try:sys.exit(1)
+                except:pass
+        else:
+            if client_addr[0] in BLOCKED_CLIENTS:
+                infoOut("[BLOCKED]IP Blacklisted",first_line,client_addr)
+                conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n')
+                conn.close()
+                try:sys.exit(1)
+                except:pass
     except:
-        print("Blocked IP check Failed !")
-    # check BLOCKED IPs END
+        print("IP Based Filtering Failed !")
+    # IP Based Filtering END
 
     #special Character Sanitisation START
     try:
