@@ -54,7 +54,7 @@ def prthread(conn, client_addr):
     # capture request from client
     request = conn.recv(MAX_RCV)
     result = request.find(b'\r\n\r\n')
-
+    print(request)
     # parse the first line
     first_line = request.split(b'\n')[0]
 
@@ -84,7 +84,7 @@ def prthread(conn, client_addr):
                 try:sys.exit(1)
                 except:pass
     except:
-        print("Country based filtering Failed !")
+        trace("Country based filtering Failed !")
     # Country based filtering END
 
     # check PROXY IPs START
@@ -96,7 +96,7 @@ def prthread(conn, client_addr):
             try:sys.exit(1)
             except:pass
     except:
-        print("Proxy IP check Failed !")
+        trace("Proxy IP check Failed !")
     # check PROXY IPs END
 
     # IP Based Filtering START
@@ -116,7 +116,7 @@ def prthread(conn, client_addr):
                 try:sys.exit(1)
                 except:pass
     except:
-        print("IP Based Filtering Failed !")
+        trace("IP Based Filtering Failed !")
     # IP Based Filtering END
 
     #special Character Sanitisation START
@@ -124,7 +124,7 @@ def prthread(conn, client_addr):
         for key, value in Special_Chars_HTML_code.items():
             act=act.replace(key.encode('utf-8'),value.encode('utf-8'))
     except:
-        print("Special Character Sanitization Failed !")
+        trace("Special Character Sanitization Failed !")
     #special Character Sanitisation END
     
     #SQL Injection Check START
@@ -155,7 +155,7 @@ def prthread(conn, client_addr):
         sta=sta.replace(b'&frasl;',b'/')
         request=sta+act
     except:
-        print("SQL Injection Check Failed !")
+        trace("SQL Injection Check Failed !")
     #SQL Injection Check END
 
     #Intelligent Request Testing START (PENDING)
@@ -164,7 +164,7 @@ def prthread(conn, client_addr):
             ##pass request to machine learning model for testing
             pass
     except:
-        print('Failed Intelligent Request Testing !')
+        trace('Failed Intelligent Request Testing !')
     #Intelligent Request Testing END
 
 
@@ -183,7 +183,7 @@ def prthread(conn, client_addr):
         cadd[0]+=z
         infoOut("Request",first_line,cadd)
     except:
-        print("Logging Failed !")
+        trace("Logging Failed !")
     # LOGGING END
     
     #Web Application address
@@ -225,72 +225,76 @@ def prthread(conn, client_addr):
         except:pass
 # working thread END
 
+# thread : update rules from database
 def dbthread(arg):
     profid=arg
     #creating connection to Sqlite3 Database
-    conn = sqlite3.connect('waf.db')
-    c = conn.cursor()
-    while True:
-        if profid==None:
-            profid=(1,)
-        try:
-            profile=c.execute("SELECT * FROM wafrules WHERE profID=?",profid)[0]
-            #check for OnlyaAllowedIP flag
-            if profile['onlyallowedip']==1:
-                global OnlyAllowedIP
-                global ALLOWED_CLIENTS
-                OnlyAllowedIP = True
-                #update ALLOWED_CLIENTS list as per profile
-                ALLOWED_CLIENTS += list(c.execute("SELECT ip FROM ipclients WHERE status='allow' AND profID=?",profid))
-            else:
-                OnlyAllowedIP = False
+    try:
+        conn = sqlite3.connect('waf.db')
+        c = conn.cursor()
+        while True:
+            if profid==None:
+                profid=(1,)
+            try:
+                profile=c.execute("SELECT * FROM wafrules WHERE profID=?",profid)[0]
+                #check for OnlyaAllowedIP flag
+                if profile['onlyallowedip']==1:
+                    global OnlyAllowedIP
+                    global ALLOWED_CLIENTS
+                    OnlyAllowedIP = True
+                    #update ALLOWED_CLIENTS list as per profile
+                    ALLOWED_CLIENTS += list(c.execute("SELECT ip FROM ipclients WHERE status='allow' AND profID=?",profid))
+                else:
+                    OnlyAllowedIP = False
 
-            #check for OnlyaAllowedCountry flag
-            if profile['onlyallowedcountries']==1:
-                global OnlyAllowedCountries
-                global ALLOWED_COUNTRIES
-                OnlyAllowedCountries = True
-                #update ALLOWED_CLIENTS list as per profile
-                ALLOWED_COUNTRIES += list(c.execute("SELECT ip FROM countryrule WHERE status='allow' AND profID=?",profid))
-            else:
-                OnlyAllowedCountries = False
+                #check for OnlyaAllowedCountry flag
+                if profile['onlyallowedcountries']==1:
+                    global OnlyAllowedCountries
+                    global ALLOWED_COUNTRIES
+                    OnlyAllowedCountries = True
+                    #update ALLOWED_CLIENTS list as per profile
+                    ALLOWED_COUNTRIES += list(c.execute("SELECT ip FROM countryrule WHERE status='allow' AND profID=?",profid))
+                else:
+                    OnlyAllowedCountries = False
 
-            #check for Proxy Block flag
-            if profile['proxyblock']==1:
-                global PROXY_BLOCK
-                PROXY_BLOCK = True
-            else:
-                PROXY_BLOCK = False
+                #check for Proxy Block flag
+                if profile['proxyblock']==1:
+                    global PROXY_BLOCK
+                    PROXY_BLOCK = True
+                else:
+                    PROXY_BLOCK = False
 
-            #check for intelligent test flag
-            if profile['intelligenttest']==1:
-                global INTELLIGENT_REQ_TEST
-                INTELLIGENT_REQ_TEST = True
-            else:
-                INTELLIGENT_REQ_TEST = False
-            
-            #set number of request to hold
-            global REQUEST_HOLD
-            REQUEST_HOLD = int(profile['requesthold'])
+                #check for intelligent test flag
+                if profile['intelligenttest']==1:
+                    global INTELLIGENT_REQ_TEST
+                    INTELLIGENT_REQ_TEST = True
+                else:
+                    INTELLIGENT_REQ_TEST = False
+                
+                #set number of request to hold
+                global REQUEST_HOLD
+                REQUEST_HOLD = int(profile['requesthold'])
 
-            #set max request size
-            global MAX_RCV
-            MAX_RCV = int(profile['maxrcv'])
+                #set max request size
+                global MAX_RCV
+                MAX_RCV = int(profile['maxrcv'])
 
-            #check for BLOCKED CLIENTS
-            global BLOCKED_CLIENTS
-            BLOCKED_CLIENTS += list(c.execute("SELECT ip FROM ipclients WHERE status='block' AND profID=?",profid))
+                #check for BLOCKED CLIENTS
+                global BLOCKED_CLIENTS
+                BLOCKED_CLIENTS += list(c.execute("SELECT ip FROM ipclients WHERE status='block' AND profID=?",profid))
 
-            #check blocked Countries
-            global BLOCKED_COUNTRY
-            BLOCKED_COUNTRY += list(c.execute("SELECT ip FROM countryrule WHERE status='block' AND profID=?",profid))
-        except:
-            profid=profid=(1,)
-            print('No Such profile as',profid,"Using Default profile !")
-        time.sleep(3)
+                #check blocked Countries
+                global BLOCKED_COUNTRY
+                BLOCKED_COUNTRY += list(c.execute("SELECT ip FROM countryrule WHERE status='block' AND profID=?",profid))
+            except:
+                profid=profid=(1,)
+                trace('No Such profile as'+str(profid)+"Using Default profile !")
+            time.sleep(3)
 
-    conn.commit()
-    conn.close()
+        conn.commit()
+        conn.close()
+    except:
+        print("Failed to connect to database, using in-file rules!")
 
 #Output info if DEBUG true and color code as per rule hitted
 def infoOut(rtyp,request,rfrom):
@@ -316,7 +320,7 @@ def main():
     if argl<2:
         port = 8080 #default Port
         if str(input("No arguements provided !\nEnter 'yes' if you want to continue with default configuration: ")).lower()!='yes':
-            print("Usage ")
+            print("Usage: server.py portNO DEBUG/NODEBUG profileID")
             exit()
         trace ("No port arguement Now using port=8080")
     
