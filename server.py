@@ -54,7 +54,7 @@ def prthread(conn, client_addr):
     # capture request from client
     request = conn.recv(MAX_RCV)
     result = request.find(b'\r\n\r\n')
-    print(request)
+    
     # parse the first line
     first_line = request.split(b'\n')[0]
 
