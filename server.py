@@ -12,7 +12,6 @@ import time
 ####################################################################
 
 DEBUG = False                # debug mode to see all debug messages
-OnlyAllowedIP = False        # Check for only allowed clients rule
 ALLOWED_CLIENTS = []         # Allowed Clients
 BLOCKED_CLIENTS = []         # BLOCKED clients
 REQUEST_HOLD = 50            # number connections to hold
@@ -226,45 +225,66 @@ def prthread(conn, client_addr):
         except:pass
 # working thread END
 
+#function for rowfactory of sqlite fetch
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
+
 # thread : update rules from database
 def dbthread(arg):
     profid=arg
     #creating connection to Sqlite3 Database
     try:
         conn = sqlite3.connect('waf.db')
-        c = conn.cursor()
+        conn.row_factory = dict_factory
         while True:
             if profid==None:
                 profid=(1,)
             try:
-                profile=c.execute("SELECT * FROM wafrules WHERE profID=?",profid)[0]
+                c = conn.cursor()
+                c.execute("SELECT * FROM wafrules WHERE profID=?",profid)
+                qres=c.fetchall()
+                c.close()
+                if len(qres)<1:
+                    raise Exception('No such Profile !')
+                else:
+                    profile=qres[0]
                 #check for OnlyaAllowedIP flag
                 if profile['onlyallowedip']==1:
                     global OnlyAllowedIP
                     global ALLOWED_CLIENTS
                     OnlyAllowedIP = True
                     #update ALLOWED_CLIENTS list as per profile
-                    ALLOWED_CLIENTS += list(c.execute("SELECT ip FROM ipclients WHERE status='allow' AND profID=?",profid))
+                    c = conn.cursor()
+                    ALLOWED_CLIENTS=[]
+                    c.execute("SELECT ip FROM ipclients WHERE status='allow' AND profID=?",profid)
+                    qres=c.fetchall()
+                    ALLOWED_CLIENTS += list(qres)
+                    c.close()
                 else:
                     OnlyAllowedIP = False
-
                 #check for OnlyaAllowedCountry flag
                 if profile['onlyallowedcountries']==1:
                     global OnlyAllowedCountries
                     global ALLOWED_COUNTRIES
                     OnlyAllowedCountries = True
                     #update ALLOWED_CLIENTS list as per profile
-                    ALLOWED_COUNTRIES += list(c.execute("SELECT ip FROM countryrule WHERE status='allow' AND profID=?",profid))
+                    c = conn.cursor()
+                    ALLOWED_COUNTRIES=[]
+                    c.execute("SELECT countryCode FROM countryrule WHERE status='allow' AND profID=?",profid)
+                    qres=c.fetchall()
+                    ALLOWED_COUNTRIES += list(qres)
+                    c.close()
                 else:
                     OnlyAllowedCountries = False
-
                 #check for Proxy Block flag
                 if profile['proxyblock']==1:
                     global PROXY_BLOCK
                     PROXY_BLOCK = True
                 else:
                     PROXY_BLOCK = False
-
                 #check for intelligent test flag
                 if profile['intelligenttest']==1:
                     global INTELLIGENT_REQ_TEST
@@ -282,16 +302,25 @@ def dbthread(arg):
 
                 #check for BLOCKED CLIENTS
                 global BLOCKED_CLIENTS
-                BLOCKED_CLIENTS += list(c.execute("SELECT ip FROM ipclients WHERE status='block' AND profID=?",profid))
-
+                c = conn.cursor()
+                BLOCKED_CLIENTS=[]
+                c.execute("SELECT ip FROM ipclients WHERE status='block' AND profID=?",profid)
+                qres=c.fetchall()
+                BLOCKED_CLIENTS += list(qres)
+                c.close()
+                
                 #check blocked Countries
                 global BLOCKED_COUNTRY
-                BLOCKED_COUNTRY += list(c.execute("SELECT ip FROM countryrule WHERE status='block' AND profID=?",profid))
+                c = conn.cursor()
+                BLOCKED_COUNTRY=[]
+                c.execute("SELECT countryCode FROM countryrule WHERE status='block' AND profID=?",profid)
+                qres=c.fetchall()
+                BLOCKED_COUNTRY += list(qres)
+                c.close()
             except:
                 profid=profid=(1,)
                 trace('No Such profile as'+str(profid)+"Using Default profile !")
             time.sleep(3)
-
         conn.commit()
         conn.close()
     except:
@@ -347,17 +376,17 @@ def main():
             print("Debug disabled as Second arguement provided is not DEBUG")
     
     #set profile for rules
+    profileID = None
     if argl>3:
         try:
             profileID = (int(sys.argv[3]),)
         except:
-            profileID = None
             print('Invalid ProfileID given in argument',sys.argv[3])
             print('Using Default profile')
 
     # start thread to get updates from database
     try:
-        thread.start_new_thread(dbthread,profileID)
+        thread.start_new_thread(dbthread,(profileID,))
     except:
         print("Could not start thread for database Updates!\n#########Running on in-file rules !#########")
 
