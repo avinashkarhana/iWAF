@@ -277,7 +277,8 @@ of implementation and deployment cost and security level.
 
 There can be future the enhancements in the project like
 
-##### ➢```Filter rule flexibility can be introduced```
+##### ➢~~```Filter rule flexibility can be introduced```~~ 
+Now Rule management available via database
 ##### ➢```Multi-Application handling can be added```
 And many more.
 
