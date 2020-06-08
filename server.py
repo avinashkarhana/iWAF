@@ -192,11 +192,23 @@ def prthread(conn, client_addr):
     port = 80
     if port!=80:port1=":"+str(port)
     else:port1=''
+    
+    #replace WAF server with actual server in request
     try:
         second_line = request.split(b'\n')[1].split(b" ")[1][:-1]
         request=request.replace(second_line,(webserver+str(port1)).encode('utf-8'))
     except:
-        pass
+        trace("Could not replace server with actual server in request but, still trying to send!")
+    
+    #Inject True-Client-IP in headers
+    try:
+        if len(request.split(b'\n'))>1:
+            zet=b'\r\n'+request[request.find(request.split(b'\n')[1]):]
+        else:
+            zet=''
+        request=request.split(b'\n')[0][:-1]+b'\r\nTrue-Client-IP: '+(str(client_addr[0]).encode('utf-8'))+zet
+    except:
+        trace("Failed to Inject True-Client-IP")
 
     #WEB APPLICATION SOCKET
     try:
