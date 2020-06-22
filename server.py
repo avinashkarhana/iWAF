@@ -18,7 +18,8 @@ REQUEST_HOLD = 50            # number connections to hold
 MAX_RCV = 999999             # max number data bytes to receive
 PROXY_BLOCK = False           # Block access through known Web Proxy or VPN
 INTELLIGENT_REQ_TEST = False # Intelligent request testing via Machine Learning (Increases Response time!)
-OnlyAllowedIP = False        # Check for only allowed countries rule
+OnlyAllowedCountries = False # Check for only allowed countries rule
+OnlyAllowedIP = False        # Check for only allowed IP rule
 ALLOWED_COUNTRIES = []       # Allowed Access in specific countries via IP geo location
 BLOCKED_COUNTRY = []         # Blocked Access in specific countries via IP geo location
 
@@ -89,7 +90,7 @@ def prthread(conn, client_addr):
 
     # check PROXY IPs START
     try:
-        if ipdetails['proxy']=='true' and PROXY_BLOCK:
+        if ipdetails['proxy']==True and PROXY_BLOCK:
             infoOut("[BLOCKED]PROXY IP",first_line,client_addr)
             conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service can not be used with proxy !!</h1>\r\n')
             conn.close()
@@ -273,7 +274,9 @@ def dbthread(arg):
                     ALLOWED_CLIENTS=[]
                     c.execute("SELECT ip FROM ipclients WHERE status='allow' AND profID=?",profid)
                     qres=c.fetchall()
-                    ALLOWED_CLIENTS += list(qres)
+                    qer=[]
+                    for  k in qres:qer.append(k['ip'])
+                    ALLOWED_CLIENTS += qer
                     c.close()
                 else:
                     OnlyAllowedIP = False
@@ -287,7 +290,9 @@ def dbthread(arg):
                     ALLOWED_COUNTRIES=[]
                     c.execute("SELECT countryCode FROM countryrule WHERE status='allow' AND profID=?",profid)
                     qres=c.fetchall()
-                    ALLOWED_COUNTRIES += list(qres)
+                    qer=[]
+                    for  k in qres:qer.append(k['countryCode'])
+                    ALLOWED_COUNTRIES += qer
                     c.close()
                 else:
                     OnlyAllowedCountries = False
@@ -318,7 +323,9 @@ def dbthread(arg):
                 BLOCKED_CLIENTS=[]
                 c.execute("SELECT ip FROM ipclients WHERE status='block' AND profID=?",profid)
                 qres=c.fetchall()
-                BLOCKED_CLIENTS += list(qres)
+                qer=[]
+                for  k in qres:qer.append(k['ip'])
+                BLOCKED_CLIENTS += qer
                 c.close()
                 
                 #check blocked Countries
@@ -327,7 +334,9 @@ def dbthread(arg):
                 BLOCKED_COUNTRY=[]
                 c.execute("SELECT countryCode FROM countryrule WHERE status='block' AND profID=?",profid)
                 qres=c.fetchall()
-                BLOCKED_COUNTRY += list(qres)
+                qer=[]
+                for  k in qres:qer.append(k['countryCode'])
+                BLOCKED_COUNTRY += qer
                 c.close()
             except:
                 profid=profid=(1,)
