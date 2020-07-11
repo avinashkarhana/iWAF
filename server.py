@@ -6,6 +6,9 @@ import requests
 import json
 import sqlite3
 import time
+from intelligent.SQLiPredictor import Intelligent
+#creating instance of Intelligent class
+zop = Intelligent() 
 
 ####################################################################
 ####################### Default Configuration START#################
@@ -22,7 +25,8 @@ OnlyAllowedCountries = False # Check for only allowed countries rule
 OnlyAllowedIP = False        # Check for only allowed IP rule
 ALLOWED_COUNTRIES = []       # Allowed Access in specific countries via IP geo location
 BLOCKED_COUNTRY = []         # Blocked Access in specific countries via IP geo location
-
+INELLIGENT_MODE = 'NORMAL'   # Intelligent mode
+INTELLIGENT_THRESHOLD={'NORMAL':.50,'HARD':0.481,'UNDER-ATTACK':.441} # Intelligent Threshold values as per modes
 ####################################################################
 ####################### Default Configuration END###################
 ####################################################################
@@ -76,6 +80,7 @@ def prthread(conn, client_addr):
                 conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n')
                 conn.close()
                 try:sys.exit(1)
+                except SystemExit:sys.exit(1)
                 except:pass
         else:
             if ipdetails['countryCode'] in BLOCKED_COUNTRY:
@@ -83,7 +88,9 @@ def prthread(conn, client_addr):
                 conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n')
                 conn.close()
                 try:sys.exit(1)
+                except SystemExit:sys.exit(1)
                 except:pass
+    except SystemExit:sys.exit(1)
     except:
         trace("Country based filtering Failed !")
     # Country based filtering END
@@ -95,7 +102,9 @@ def prthread(conn, client_addr):
             conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service can not be used with proxy !!</h1>\r\n')
             conn.close()
             try:sys.exit(1)
+            except SystemExit:sys.exit(1)
             except:pass
+    except SystemExit:sys.exit(1)
     except:
         trace("Proxy IP check Failed !")
     # check PROXY IPs END
@@ -108,6 +117,7 @@ def prthread(conn, client_addr):
                 conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n')
                 conn.close()
                 try:sys.exit(1)
+                except SystemExit:sys.exit(1)
                 except:pass
         else:
             if client_addr[0] in BLOCKED_CLIENTS:
@@ -115,7 +125,9 @@ def prthread(conn, client_addr):
                 conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n')
                 conn.close()
                 try:sys.exit(1)
+                except SystemExit:sys.exit(1)
                 except:pass
+    except SystemExit:sys.exit(1)
     except:
         trace("IP Based Filtering Failed !")
     # IP Based Filtering END
@@ -124,6 +136,7 @@ def prthread(conn, client_addr):
     try:
         for key, value in Special_Chars_HTML_code.items():
             act=act.replace(key.encode('utf-8'),value.encode('utf-8'))
+    except SystemExit:sys.exit(1)
     except:
         trace("Special Character Sanitization Failed !")
     #special Character Sanitisation END
@@ -138,8 +151,9 @@ def prthread(conn, client_addr):
                 conn.close()
                 infoOut("[BLOCKED]SQL Injection",first_line,client_addr)
                 with open('intrusion.log','a+') as intrusionlogfile:
-                    intrusionlogfile.write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act)+"\n")
+                    intrusionlogfile.write("SQL Injection(REGEX)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act)+"\n")
                 try:sys.exit(1)
+                except SystemExit:sys.exit(1)
                 except:pass
 
         first_line1=first_line.upper()
@@ -149,12 +163,14 @@ def prthread(conn, client_addr):
                 conn.close()
                 infoOut("[BLOCKED]SQL Injection",first_line,client_addr)
                 with open('intrusion.log','a+') as intrusionlogfile:
-                    intrusionlogfile.write("SQL Injection❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
+                    intrusionlogfile.write("SQL Injection(REGEX)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
                 try:sys.exit(1)
+                except SystemExit:sys.exit(1)
                 except:pass
         
         sta=sta.replace(b'&frasl;',b'/')
         request=sta+act
+    except SystemExit:sys.exit(1)
     except:
         trace("SQL Injection Check Failed !")
     #SQL Injection Check END
@@ -162,8 +178,42 @@ def prthread(conn, client_addr):
     #Intelligent Request Testing START (PENDING)
     try:
         if INTELLIGENT_REQ_TEST:
-            ##pass request to machine learning model for testing
-            pass
+            #check act
+            global zop
+            if len(str(act))>3:
+                try:
+                    tu=str(act).split(" ")[1].split("?")[1]
+                    intelliresult=zop.predict_sqli_attack(input_val=tu)
+                    uui=True
+                except:
+                    uui=False
+                if uui and intelliresult>INTELLIGENT_THRESHOLD[INELLIGENT_MODE.upper()]:
+                    conn.send(failattemtmsg+b'i')
+                    conn.close()
+                    infoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection",first_line,client_addr)
+                    with open('intrusion.log','a+') as intrusionlogfile:
+                        intrusionlogfile.write("SQL Injection(INTELLIGENT)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
+                    try:sys.exit(1)
+                    except SystemExit:sys.exit(1)
+                    except:pass
+            #check firstline1
+            if len(str(first_line1))>3:
+                try:
+                    tu=str(first_line1).split(" ")[1].split("?")[1]
+                    intelliresult1=zop.predict_sqli_attack(input_val=tu)
+                    uui=True
+                except:
+                    uui=False
+                if uui and intelliresult1>INTELLIGENT_THRESHOLD[INELLIGENT_MODE.upper()]:
+                    conn.send(failattemtmsg+b'i')
+                    conn.close()
+                    infoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection",first_line,client_addr)
+                    with open('intrusion.log','a+') as intrusionlogfile:
+                        intrusionlogfile.write("SQL Injection(INTELLIGENT)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
+                    try:sys.exit(1)
+                    except SystemExit:sys.exit(1)
+                    except:pass
+    except SystemExit:sys.exit(1)
     except:
         trace('Failed Intelligent Request Testing !')
     #Intelligent Request Testing END
@@ -235,6 +285,7 @@ def prthread(conn, client_addr):
         if conn:conn.close()
         infoOut("Session Reset",first_line,client_addr)
         try:sys.exit(1)
+        except SystemExit:sys.exit(1)
         except:pass
 # working thread END
 
@@ -313,6 +364,10 @@ def dbthread(arg):
                 global REQUEST_HOLD
                 REQUEST_HOLD = int(profile['requesthold'])
 
+                #set Intelligent Mode
+                global INELLIGENT_MODE
+                INELLIGENT_MODE = profile['intelligentmode']
+
                 #set max request size
                 global MAX_RCV
                 MAX_RCV = int(profile['maxrcv'])
@@ -350,9 +405,10 @@ def dbthread(arg):
 #Output info if DEBUG true and color code as per rule hitted
 def infoOut(rtyp,request,rfrom):
     if DEBUG:
-        if "Request" in rtyp:clr = 34
+        if "Request" == rtyp:clr = 34
         elif "[BLOCKED]IP Blacklist" in rtyp:clr = 33
         elif "[BLOCKED]SQL Injection" in rtyp: clr=31
+        elif "[BLOCKED]Intelligent System Marked Request as SQL Injection" in rtyp:clr=31
         elif "[BLOCKED]PROXY IP" in rtyp: clr=32
         elif "[BLOCKED]Country Blocked" in rtyp: clr=32
         else:clr=30
@@ -408,6 +464,7 @@ def main():
     # start thread to get updates from database
     try:
         thread.start_new_thread(dbthread,(profileID,))
+    except SystemExit:sys.exit(1)
     except:
         print("Could not start thread for database Updates!\n#########Running on in-file rules !#########")
 
@@ -429,6 +486,7 @@ def main():
             s.close()
         trace ("Error while opening socket : "+ str(e))
         try:sys.exit(1)
+        except SystemExit:sys.exit(1)
         except:pass
 
     # connections from client

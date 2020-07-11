@@ -1,0 +1,1 @@
+from .SQLiPredictor import Intelligent
