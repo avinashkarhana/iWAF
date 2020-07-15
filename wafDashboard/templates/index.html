@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1 style="background: lightgray;text-align: center;">{% block title %}Profiles{% endblock %}</h1><hr>
+  {% if g.user %}
+    <a class="metro three-d" href="{{ url_for('dashboard.create') }}">Create New Profile</a>
+    <form style="right: 0;float:right;display: inline;" action="{{ url_for('dashboard.setcurprof') }}" method="POST">
+        <b>Current Working Profile: </b> <select onchange="this.parentNode.submit()" class="simple-input sel wide" style="right: 0;float:right;display: inline;" name='curprof'>
+            {% for profile in profiles %}
+            {% if profile['profID']|string == curprof|string %}
+                <option value={{ profile['profID'] }} selected>{{ profile['Title'] }}-{{ profile['profID'] }}</option>
+            {% else %}
+                <option value={{ profile['profID'] }} >{{ profile['Title'] }}-{{ profile['profID'] }}</option>
+            {% endif %}
+            {% endfor %}
+        </select>
+    </form>
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% for profile in profiles %}
+    <div >
+        <table>
+            <form style="display: inline;" action="{{ url_for('dashboard.update', id=profile['profID']) }}" id="profile{{ profile['profID'] }}" method="post">
+                <tr><td>Profile ID</td>
+                    <td>Title</td>
+                    <td>Description</td>
+                    <td>Allow Only Specific Ip Mode</td>
+                    <td>Allow Only in Specific Country Mode</td>
+                    <td>Proxy/VPN Blocking Mode</td>
+                    <td>Intelligent Testing Mode</td>
+                    <td>Intelligent Mode</td>
+                    <td>Max. number of request to hold at a time</td>
+                    <td>Max. size of request(bytes)</td>
+                </tr>
+                <tr>
+                    <td><div class="demo-wrapper"><input type='text' readonly class="simple-input" style="width: 20px!important" value='{{ request.form['profID'] or profile['profID'] }}''></td>
+                    <td><div class="demo-wrapper"><input class="simple-input" name="title" value="{{ request.form['title'] or profile['title'] }}" required></td>
+                    <td><textarea style="margin-top: 2px!important;border: 4px solid #F1B720;height: 32px;border-radius: 5px;"  name="description" >{{ request.form['description'] or profile['description'] }}</textarea></td>
+                    <td>
+                        <select class="simple-input sel" style="min-width:170px!important;max-width: 170px;" name="onlyallowedip" type="text" value="{{ request.form['onlyallowedip'] or profile['onlyallowedip'] }}" required>
+                            {% if profile['onlyallowedip']==1 %}
+                            <option value="1" selected>On</option>
+                            <option value="0">Off</option>
+                            {% else %}
+                            <option value="1">On</option>
+                            <option value="0" selected>Off</option>
+                            {% endif %}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="simple-input sel" style="min-width:170px!important;max-width: 170px;" name="onlyallowedcountries" type="text" value="{{ request.form['onlyallowedcountries'] or profile['onlyallowedcountries'] }}" required>
+                            {% if profile['onlyallowedcountries']==1 %}
+                            <option value="1" selected>On</option>
+                            <option value="0">Off</option>
+                            {% else %}
+                            <option value="1">On</option>
+                            <option value="0" selected>Off</option>
+                            {% endif %}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="simple-input sel" style="min-width:116px!important;max-width: 210px;" name="proxyblock" type="text" value="{{ request.form['proxyblock'] or profile['proxyblock'] }}" required>
+                            {% if profile['proxyblock']==1 %}
+                            <option value="1" selected>On</option>
+                            <option value="0">Off</option>
+                            {% else %}
+                            <option value="1">On</option>
+                            <option value="0" selected>Off</option>
+                            {% endif %}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="simple-input sel" style="min-width:90px!important;max-width: 210px;" name="intelligenttest" type="text" value="{{ request.form['intelligenttest'] or profile['intelligenttest'] }}" required>
+                            {% if profile['intelligenttest']==1 %}
+                            <option value="1" selected>On</option>
+                            <option value="0">Off</option>
+                            {% else %}
+                            <option value="1">On</option>
+                            <option value="0" selected>Off</option>
+                            {% endif %}
+                        </select>
+                    </td>
+                    <td>
+                        <select class="simple-input sel" style="min-width:120px!important;max-width: 120px;" name="intelligentmode" type="text" value="{{ request.form['intelligentmode'] or profile['intelligentmode'] }}" required>
+                            {% if profile['intelligentmode']=='NORMAL' %}
+                            <option value="NORMAL" selected>Normal</option>
+                            <option value="HARD">Hard</option>
+                            <option value="UNDER-ATTACK">Under-Attack(May cause increase in number of FalsePositives!)</option>
+                            {% elif profile['intelligentmode']=='HARD' %}
+                            <option value="NORMAL">Normal</option>
+                            <option value="HARD" selected>Hard</option>
+                            <option value="UNDER-ATTACK">Under-Attack(May cause increase in number of FalsePositives!)</option>
+                            {% else %}
+                            <option value="NORMAL">Normal</option>
+                            <option value="HARD">Hard</option>
+                            <option value="UNDER-ATTACK" selected>Under-Attack(May cause increase in number of FalsePositives!)</option>
+                            {% endif %}
+                        </select>
+                    </td>
+                    <td><div class="demo-wrapper"><input class="simple-input" style="margin-top: 3px!important;" name="requesthold" value="{{ request.form['requesthold'] or profile['requesthold'] }}" required></div></td>
+                    <td><div class="demo-wrapper"><input class="simple-input" style="margin-top: 3px!important;" name="maxrcv" value="{{ request.form['maxrcv'] or profile['maxrcv'] }}" required></div></td>
+                </tr>
+                <tr>
+                    <td colspan="8">
+                        <input class="modern socle" type="submit" id="profileUpdate{{ profile['profID'] }}" style="display: none;" value="Update">             
+            </form>
+                    <button id="profile{{ profile['profID'] }}Edit" class="modern socle" onclick="show(profile{{ profile['profID'] }} )">Edit</button>
+                    <a class="modern socle" href="{{ url_for('dashboard.update', id=profile['profID']) }}">Update in Depth</a>
+            <form style="display: inline;" action="{{ url_for('dashboard.delete', id=profile['profID']) }}" method="post">
+                    <input class="modern socle" id="profile{{ profile['profID'] }}Delete" style="display: none;" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
+                </td>
+            </form>
+            </tr>
+        </table>
+        <hr><hr>
+    </div>
+    {% endfor %}
+    <script>
+        var forms = document.forms;
+        var form = [];
+        for(var i=0;i<forms.length;i++){try{if((forms[i].id).includes("profile")){form.push(forms[i]);}}catch{}}
+        for (var i = 0, leni = form.length; i < leni; ++i){
+            var elements = form[i].elements;
+            for (var j = 0, len = elements.length; j < len; ++j) {
+                elements[j].readOnly = true;
+            }
+        }
+        function show(id){
+            var form = document.getElementById(id.id);
+            var elements = form.elements;
+            document.getElementById(id.id+"Edit").style.display="none";
+            document.getElementById(id.id+"Delete").style.display="inline";
+            for (var i = 0, len = elements.length; i < len; ++i) {
+                elements[i].readOnly = false;
+                elements[i].style.display = 'inline';
+            }
+
+        }
+    </script>
+{% endblock %}

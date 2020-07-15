@@ -7,6 +7,7 @@ import json
 import sqlite3
 import time
 from intelligent.SQLiPredictor import Intelligent
+import traceback
 #creating instance of Intelligent class
 zop = Intelligent() 
 
@@ -299,16 +300,31 @@ def dict_factory(cursor, row):
 # thread : update rules from database
 def dbthread(arg):
     profid=arg
+    force=True
+    if profid==None:
+            profid=1
+            force=False
     #creating connection to Sqlite3 Database
     try:
         conn = sqlite3.connect('waf.db')
         conn.row_factory = dict_factory
         while True:
+            try:
+                if not force:
+                    c = conn.cursor()
+                    c.execute("SELECT profID FROM CURPROF")
+                    qres=c.fetchone()
+                    c.close()
+                    profid=qres['profID']
+            except:
+                traceback.print_exc()
+                pass
+
             if profid==None:
-                profid=(1,)
+                profid=1
             try:
                 c = conn.cursor()
-                c.execute("SELECT * FROM wafrules WHERE profID=?",profid)
+                c.execute("SELECT * FROM wafrules WHERE profID="+str(profid))
                 qres=c.fetchall()
                 c.close()
                 if len(qres)<1:
@@ -323,7 +339,7 @@ def dbthread(arg):
                     #update ALLOWED_CLIENTS list as per profile
                     c = conn.cursor()
                     ALLOWED_CLIENTS=[]
-                    c.execute("SELECT ip FROM ipclients WHERE status='allow' AND profID=?",profid)
+                    c.execute("SELECT ip FROM ipclients WHERE status=1 AND profID="+str(profid))
                     qres=c.fetchall()
                     qer=[]
                     for  k in qres:qer.append(k['ip'])
@@ -339,7 +355,7 @@ def dbthread(arg):
                     #update ALLOWED_CLIENTS list as per profile
                     c = conn.cursor()
                     ALLOWED_COUNTRIES=[]
-                    c.execute("SELECT countryCode FROM countryrule WHERE status='allow' AND profID=?",profid)
+                    c.execute("SELECT countryCode FROM countryrule WHERE status=1 AND profID="+str(profid))
                     qres=c.fetchall()
                     qer=[]
                     for  k in qres:qer.append(k['countryCode'])
@@ -366,7 +382,8 @@ def dbthread(arg):
 
                 #set Intelligent Mode
                 global INELLIGENT_MODE
-                INELLIGENT_MODE = profile['intelligentmode']
+                if profile['intelligentmode']!="NULL":
+                    INELLIGENT_MODE = profile['intelligentmode']
 
                 #set max request size
                 global MAX_RCV
@@ -376,7 +393,7 @@ def dbthread(arg):
                 global BLOCKED_CLIENTS
                 c = conn.cursor()
                 BLOCKED_CLIENTS=[]
-                c.execute("SELECT ip FROM ipclients WHERE status='block' AND profID=?",profid)
+                c.execute("SELECT ip FROM ipclients WHERE status=0 AND profID="+str(profid))
                 qres=c.fetchall()
                 qer=[]
                 for  k in qres:qer.append(k['ip'])
@@ -387,7 +404,7 @@ def dbthread(arg):
                 global BLOCKED_COUNTRY
                 c = conn.cursor()
                 BLOCKED_COUNTRY=[]
-                c.execute("SELECT countryCode FROM countryrule WHERE status='block' AND profID=?",profid)
+                c.execute("SELECT countryCode FROM countryrule WHERE status=0 AND profID="+str(profid))
                 qres=c.fetchall()
                 qer=[]
                 for  k in qres:qer.append(k['countryCode'])
@@ -395,6 +412,7 @@ def dbthread(arg):
                 c.close()
             except:
                 profid=profid=(1,)
+                traceback.print_exc()
                 trace('No Such profile as'+str(profid)+"Using Default profile !")
             time.sleep(3)
         conn.commit()

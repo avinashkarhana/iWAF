@@ -1,0 +1,631 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Edit Profile: {{ profile['title'] }}{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <script>
+        let countryoptions;
+    </script>
+    <form style="display: inline;" name="profile{{ profile['profID'] }}" action="{{ url_for('dashboard.update', id=profile['profID']) }}" id="profile{{ profile['profID'] }}" method="post">        
+            <br><label>Profile ID<button style="float: right;cursor:pointer;position:relative;right: 0;z-index: 22222;" class="metro three-d" onclick="document.location.href='/';">Home</button></label>
+            <input type='text' readonly class="simple-input iwide" style="font-weight: bold;background-color: darkgrey;padding-left:10px;padding-right:10px;max-width: 15px;" value='{{ request.form['profID'] or profile['profID'] }}'>
+            <br><label>Title</label>
+            <input class="simple-input iwide" name="title" value="{{ request.form['title'] or profile['title'] }}" required>
+            <br><label>Description</label><br>
+            <textarea style="margin-top: 2px!important;height:60px!important;width:397px;border: 4px solid #F1B720;height: 32px;border-radius: 5px;"  name="description" >{{ request.form['description'] or profile['description'] }}</textarea><br>
+            
+            <br><label>Allow Only Specific Ip Mode</label>
+            <select onchange="setcolor(this)" class="simple-input sel swide" name="onlyallowedip" type="text" value="{{ request.form['onlyallowedip'] or profile['onlyallowedip'] }}" required>
+                {% if profile['onlyallowedip']|string =='1' %}
+                <option value="1" selected>On</option>
+                <option value="0">Off</option>
+                {% else %}
+                <option value="1">On</option>
+                <option value="0" selected>Off</option>
+                {% endif %}
+            </select>
+        
+            <br><label>Allow Only in Specific Country Mode</label>
+            <select onchange="setcolor(this)" class="simple-input sel swide" name="onlyallowedcountries" type="text" value="{{ request.form['onlyallowedcountries'] or profile['onlyallowedcountries'] }}" required>
+                {% if profile['onlyallowedcountries']|string=='1' %}
+                <option value="1" selected>On</option>
+                <option value="0">Off</option>
+                {% else %}
+                <option value="1">On</option>
+                <option value="0" selected>Off</option>
+                {% endif %}
+            </select>
+        
+            <br><label>Proxy/VPN Blocking Mode</label>
+            <select onchange="setcolor(this)" class="simple-input sel swide" name="proxyblock" type="text" value="{{ request.form['proxyblock'] or profile['proxyblock'] }}" required>
+                {% if profile['proxyblock']|string=='1' %}
+                <option value="1" selected>On</option>
+                <option value="0">Off</option>
+                {% else %}
+                <option value="1">On</option>
+                <option value="0" selected>Off</option>
+                {% endif %}
+            </select>
+        
+            <br><label>Intelligent Testing Mode</label>
+            <select onchange="setcolor(this)" class="simple-input sel swide" name="intelligenttest" type="text" value="{{ request.form['intelligenttest'] or profile['intelligenttest'] }}" required>
+                {% if profile['intelligenttest']|string=='1' %}
+                <option value="1" selected>On</option>
+                <option value="0">Off</option>
+                {% else %}
+                <option value="1">On</option>
+                <option value="0" selected>Off</option>
+                {% endif %}
+            </select>
+        
+            <br><label>Intelligent Mode</label>
+            <select onchange="setcolor(this)" class="simple-input sel swide" name="intelligentmode" type="text" value="{{ request.form['intelligentmode'] or profile['intelligentmode'] }}" required>
+                {% if profile['intelligentmode']|string=='NORMAL' %}
+                <option value="NORMAL" selected>Normal</option>
+                <option value="HARD">Hard</option>
+                <option value="UNDER-ATTACK">Under-Attack(May cause increase in number of FalsePositives!)</option>
+                {% elif profile['intelligentmode']|string=='HARD' %}
+                <option value="NORMAL">Normal</option>
+                <option value="HARD" selected>Hard</option>
+                <option value="UNDER-ATTACK">Under-Attack(May cause increase in number of FalsePositives!)</option>
+                {% else %}
+                <option value="NORMAL">Normal</option>
+                <option value="HARD">Hard</option>
+                <option value="UNDER-ATTACK" selected>Under-Attack(May cause increase in number of FalsePositives!)</option>
+                {% endif %}
+            </select>
+            <br><label>Max. number of request to hold at a time</label>
+            <input class="simple-input iwide" style="margin-top: 3px!important;" name="requesthold" value="{{ request.form['requesthold'] or profile['requesthold'] }}" required>
+            <br><label>Max. size of request(bytes)</label>
+            <input class="simple-input iwide" style="margin-top: 3px!important;" name="maxrcv" value="{{ request.form['maxrcv'] or profile['maxrcv'] }}" required>
+            <br>
+            <table id="profile*{{ profile['profID'] }}-IPtable">
+                <tr><td colspan="8" style="text-align: center;"><h2>IP Based rules</h2></td></tr>
+                <tr><td></td><td>IP</td><td>Status</td></tr>
+                {% for ipclient in ipclients %}
+                    <tr id="ipclientUpdate*{{ ipclient['id'] }}-tr"><td style="max-width: 20px;">➤</td>
+                        <td>
+                            <input type='hidden' id="ipclientUpdate*{{ ipclient['id'] }}-id" value="{{ ipclient['id'] }}"" >
+                            <input class="simple-input" type='text' id="ipclientUpdate*{{ ipclient['id'] }}-ip" value="{{ ipclient['ip'] }}"" >
+                            
+                        </td>
+                        <td>
+                            <select onchange="setcolor(this)" class="simple-input sel swide" id="ipclientUpdate*{{ ipclient['id'] }}-status" >
+                                {% if ipclient['status']|string=='1' %}
+                                <option value="1" selected>Allow</option>
+                                <option value="0">Block</option>
+                                {% else %}
+                                <option value="1">Allow</option>
+                                <option value="0" selected>Block</option>
+                                {% endif %}
+                            </select>
+                        </td>
+                        <td>
+                            <span onclick="delipclient('ipclientUpdate*{{ ipclient['id'] }}','profile{{ profile['profID'] }}')" style="padding-top: 8px;cursor: pointer;height: 12px;width: 12px!important;border-radius: 50%;background-color: red;padding-left: 12px;padding-right: 11px;padding-bottom: 6px;">X</span>
+                        </td>
+                    </tr>
+                {% endfor %} 
+            </table> 
+            <span class="modern socle" onclick="AddIPClient()">Add New IP Rule</span> 
+            <table id="profile*{{ profile['profID'] }}-Countrytable">
+                <tr><td colspan="8" style="text-align: center;"><h2>Country Based rules</h2></td></tr>
+                <tr><td></td><td>Country</td><td>Status</td></tr>
+                {% for countryrule in countryrules %}
+                    <tr id="countryruleUpdate*{{ countryrule['id'] }}-tr" ><td style="max-width: 20px;">➤</td>
+                        <td style="border-bottom: 5px solid rgba(65, 61, 61, 0.715);">
+                            <input type='hidden' id="countryruleUpdate*{{ countryrule['id'] }}-id" value="{{ countryrule['id'] }}"" >
+                            <select id="countryruleUpdate*{{ countryrule['id'] }}-country" class="simple-input sel wide" style="background-color: rgba(247, 247, 247, 0.537);">
+                                <option value="AFGHANISTAN-AF">AFGHANISTAN-AF</option>
+                                <option value="ALBANIA-AL">ALBANIA-AL</option>
+                                <option value="ALGERIA-DZ">ALGERIA-DZ</option>
+                                <option value="AMERICAN SAMOA-AS">AMERICAN SAMOA-AS</option>
+                                <option value="ANDORRA-AD">ANDORRA-AD</option>
+                                <option value="ANGOLA-AO">ANGOLA-AO</option>
+                                <option value="ANTARCTICA-AQ">ANTARCTICA-AQ</option>
+                                <option value="ANTIGUA AND BARBUDA-AG">ANTIGUA AND BARBUDA-AG</option>
+                                <option value="ARGENTINA-AR">ARGENTINA-AR</option>
+                                <option value="ARMENIA-AM">ARMENIA-AM</option>
+                                <option value="ARUBA-AW">ARUBA-AW</option>
+                                <option value="AUSTRALIA-AU">AUSTRALIA-AU</option>
+                                <option value="AUSTRIA-AT">AUSTRIA-AT</option>
+                                <option value="AZERBAIJAN-AZ">AZERBAIJAN-AZ</option>
+                                <option value="BAHAMAS-BS">BAHAMAS-BS</option>
+                                <option value="BAHRAIN-BH">BAHRAIN-BH</option>
+                                <option value="BANGLADESH-BD">BANGLADESH-BD</option>
+                                <option value="BARBADOS-BB">BARBADOS-BB</option>
+                                <option value="BELARUS-BY">BELARUS-BY</option>
+                                <option value="BELGIUM-BE">BELGIUM-BE</option>
+                                <option value="BELIZE-BZ">BELIZE-BZ</option>
+                                <option value="BENIN-BJ">BENIN-BJ</option>
+                                <option value="BERMUDA-BM">BERMUDA-BM</option>
+                                <option value="BHUTAN-BT">BHUTAN-BT</option>
+                                <option value="BOLIVIA-BO">BOLIVIA-BO</option>
+                                <option value="BOSNIA AND HERZEGOVINA-BA">BOSNIA AND HERZEGOVINA-BA</option>
+                                <option value="BOTSWANA-BW">BOTSWANA-BW</option>
+                                <option value="BOUVET ISLAND-BV">BOUVET ISLAND-BV</option>
+                                <option value="BRAZIL-BR">BRAZIL-BR</option>
+                                <option value="BRITISH INDIAN OCEAN TERRITORY-IO">BRITISH INDIAN OCEAN TERRITORY-IO</option>
+                                <option value="BRUNEI DARUSSALAM-BN">BRUNEI DARUSSALAM-BN</option>
+                                <option value="BULGARIA-BG">BULGARIA-BG</option>
+                                <option value="BURKINA FASO-BF">BURKINA FASO-BF</option>
+                                <option value="BURUNDI-BI">BURUNDI-BI</option>
+                                <option value="CAMBODIA-KH">CAMBODIA-KH</option>
+                                <option value="CAMEROON-CM">CAMEROON-CM</option>
+                                <option value="CANADA-CA">CANADA-CA</option>
+                                <option value="CAPE VERDE-CV">CAPE VERDE-CV</option>
+                                <option value="CAYMAN ISLANDS-KY">CAYMAN ISLANDS-KY</option>
+                                <option value="CENTRAL AFRICAN REPUBLIC-CF">CENTRAL AFRICAN REPUBLIC-CF</option>
+                                <option value="CHAD-TD">CHAD-TD</option>
+                                <option value="CHILE-CL">CHILE-CL</option>
+                                <option value="CHINA-CN">CHINA-CN</option>
+                                <option value="CHRISTMAS ISLAND-CX">CHRISTMAS ISLAND-CX</option>
+                                <option value="COCOS (KEELING) ISLANDS-CC">COCOS (KEELING) ISLANDS-CC</option>
+                                <option value="COLOMBIA-CO">COLOMBIA-CO</option>
+                                <option value="COMOROS-KM">COMOROS-KM</option>
+                                <option value="CONGO-CG">CONGO-CG</option>
+                                <option value="CONGO, THE DEMOCRATIC REPUBLIC OF THE-CD">CONGO, THE DEMOCRATIC REPUBLIC OF THE-CD</option>
+                                <option value="COOK ISLANDS-CK">COOK ISLANDS-CK</option>
+                                <option value="COSTA RICA-CR">COSTA RICA-CR</option>
+                                <option value="CÔTE D'IVOIRE-CI">CÔTE D'IVOIRE-CI</option>
+                                <option value="CROATIA-HR">CROATIA-HR</option>
+                                <option value="CUBA-CU">CUBA-CU</option>
+                                <option value="CYPRUS-CY">CYPRUS-CY</option>
+                                <option value="CZECH REPUBLIC-CZ">CZECH REPUBLIC-CZ</option>
+                                <option value="DENMARK-DK">DENMARK-DK</option>
+                                <option value="DJIBOUTI-DJ">DJIBOUTI-DJ</option>
+                                <option value="DOMINICA-DM">DOMINICA-DM</option>
+                                <option value="DOMINICAN REPUBLIC-DO">DOMINICAN REPUBLIC-DO</option>
+                                <option value="ECUADOR-EC">ECUADOR-EC</option>
+                                <option value="EGYPT-EG">EGYPT-EG</option>
+                                <option value="EL SALVADOR-SV">EL SALVADOR-SV</option>
+                                <option value="EQUATORIAL GUINEA-GQ">EQUATORIAL GUINEA-GQ</option>
+                                <option value="ERITREA-ER">ERITREA-ER</option>
+                                <option value="ESTONIA-EE">ESTONIA-EE</option>
+                                <option value="ETHIOPIA-ET">ETHIOPIA-ET</option>
+                                <option value="FALKLAND ISLANDS (MALVINAS)-FK">FALKLAND ISLANDS (MALVINAS)-FK</option>
+                                <option value="FAROE ISLANDS-FO">FAROE ISLANDS-FO</option>
+                                <option value="FIJI-FJ">FIJI-FJ</option>
+                                <option value="FINLAND-FI">FINLAND-FI</option>
+                                <option value="FRANCE-FR">FRANCE-FR</option>
+                                <option value="FRENCH GUIANA-GF">FRENCH GUIANA-GF</option>
+                                <option value="FRENCH POLYNESIA-PF">FRENCH POLYNESIA-PF</option>
+                                <option value="FRENCH SOUTHERN TERRITORIES-TF">FRENCH SOUTHERN TERRITORIES-TF</option>
+                                <option value="GABON-GA">GABON-GA</option>
+                                <option value="GAMBIA-GM">GAMBIA-GM</option>
+                                <option value="GEORGIA-GE">GEORGIA-GE</option>
+                                <option value="GERMANY-DE">GERMANY-DE</option>
+                                <option value="GHANA-GH">GHANA-GH</option>
+                                <option value="GIBRALTAR-GI">GIBRALTAR-GI</option>
+                                <option value="GREECE-GR">GREECE-GR</option>
+                                <option value="GREENLAND-GL">GREENLAND-GL</option>
+                                <option value="GRENADA-GD">GRENADA-GD</option>
+                                <option value="GUADELOUPE-GP">GUADELOUPE-GP</option>
+                                <option value="GUAM-GU">GUAM-GU</option>
+                                <option value="GUATEMALA-GT">GUATEMALA-GT</option>
+                                <option value="GUINEA-GN">GUINEA-GN</option>
+                                <option value="GUINEA-BISSAU-GW">GUINEA-BISSAU-GW</option>
+                                <option value="GUYANA-GY">GUYANA-GY</option>
+                                <option value="HAITI-HT">HAITI-HT</option>
+                                <option value="HEARD ISLAND AND MCDONALD ISLANDS-HM">HEARD ISLAND AND MCDONALD ISLANDS-HM</option>
+                                <option value="HONDURAS-HN">HONDURAS-HN</option>
+                                <option value="HONG KONG-HK">HONG KONG-HK</option>
+                                <option value="HUNGARY-HU">HUNGARY-HU</option>
+                                <option value="ICELAND-IS">ICELAND-IS</option>
+                                <option value="INDIA-IN">INDIA-IN</option>
+                                <option value="INDONESIA-ID">INDONESIA-ID</option>
+                                <option value="IRAN, ISLAMIC REPUBLIC OF-IR">IRAN, ISLAMIC REPUBLIC OF-IR</option>
+                                <option value="IRAQ-IQ">IRAQ-IQ</option>
+                                <option value="IRELAND-IE">IRELAND-IE</option>
+                                <option value="ISRAEL-IL">ISRAEL-IL</option>
+                                <option value="ITALY-IT">ITALY-IT</option>
+                                <option value="JAMAICA-JM">JAMAICA-JM</option>
+                                <option value="JAPAN-JP">JAPAN-JP</option>
+                                <option value="JORDAN-JO">JORDAN-JO</option>
+                                <option value="KAZAKHSTAN-KZ">KAZAKHSTAN-KZ</option>
+                                <option value="KENYA-KE">KENYA-KE</option>
+                                <option value="KIRIBATI-KI">KIRIBATI-KI</option>
+                                <option value="KOREA, DEMOCRATIC PEOPLE'S REPUBLIC OF-KP">KOREA, DEMOCRATIC PEOPLE'S REPUBLIC OF-KP</option>
+                                <option value="KOREA, REPUBLIC OF-KR">KOREA, REPUBLIC OF-KR</option>
+                                <option value="KUWAIT-KW">KUWAIT-KW</option>
+                                <option value="KYRGYZSTAN-KG">KYRGYZSTAN-KG</option>
+                                <option value="LAO PEOPLE'S DEMOCRATIC REPUBLIC (LAOS)-LA">LAO PEOPLE'S DEMOCRATIC REPUBLIC (LAOS)-LA</option>
+                                <option value="LATVIA-LV">LATVIA-LV</option>
+                                <option value="LEBANON-LB">LEBANON-LB</option>
+                                <option value="LESOTHO-LS">LESOTHO-LS</option>
+                                <option value="LIBERIA-LR">LIBERIA-LR</option>
+                                <option value="LIBYAN ARAB JAMAHIRIYA-LY">LIBYAN ARAB JAMAHIRIYA-LY</option>
+                                <option value="LIECHTENSTEIN-LI">LIECHTENSTEIN-LI</option>
+                                <option value="LITHUANIA-LT">LITHUANIA-LT</option>
+                                <option value="LUXEMBOURG-LU">LUXEMBOURG-LU</option>
+                                <option value="MACAO-MO">MACAO-MO</option>
+                                <option value="MACEDONIA, THE FORMER YUGOSLAV REPUBLIC OF-MK">MACEDONIA, THE FORMER YUGOSLAV REPUBLIC OF-MK</option>
+                                <option value="MADAGASCAR-MG">MADAGASCAR-MG</option>
+                                <option value="MALAWI-MW">MALAWI-MW</option>
+                                <option value="MALAYSIA-MY">MALAYSIA-MY</option>
+                                <option value="MALDIVES-MV">MALDIVES-MV</option>
+                                <option value="MALI-ML">MALI-ML</option>
+                                <option value="MALTA-MT">MALTA-MT</option>
+                                <option value="MARSHALL ISLANDS-MH">MARSHALL ISLANDS-MH</option>
+                                <option value="MARTINIQUE-MQ">MARTINIQUE-MQ</option>
+                                <option value="MAURITANIA-MR">MAURITANIA-MR</option>
+                                <option value="MAURITIUS-MU">MAURITIUS-MU</option>
+                                <option value="MAYOTTE-YT">MAYOTTE-YT</option>
+                                <option value="MEXICO-MX">MEXICO-MX</option>
+                                <option value="MICRONESIA, FEDERATED STATES OF-FM">MICRONESIA, FEDERATED STATES OF-FM</option>
+                                <option value="MOLDOVA, REPUBLIC OF-MD">MOLDOVA, REPUBLIC OF-MD</option>
+                                <option value="MONACO-MC">MONACO-MC</option>
+                                <option value="MONGOLIA-MN">MONGOLIA-MN</option>
+                                <option value="MONTENEGRO-ME">MONTENEGRO-ME</option>
+                                <option value="MONTSERRAT-MS">MONTSERRAT-MS</option>
+                                <option value="MOROCCO-MA">MOROCCO-MA</option>
+                                <option value="MOZAMBIQUE-MZ">MOZAMBIQUE-MZ</option>
+                                <option value="MYANMAR-MM">MYANMAR-MM</option>
+                                <option value="NAMIBIA-NA">NAMIBIA-NA</option>
+                                <option value="NAURU-NR">NAURU-NR</option>
+                                <option value="NEPAL-NP">NEPAL-NP</option>
+                                <option value="NETHERLANDS-NL">NETHERLANDS-NL</option>
+                                <option value="NETHERLANDS ANTILLES-AN">NETHERLANDS ANTILLES-AN</option>
+                                <option value="NEW CALEDONIA-NC">NEW CALEDONIA-NC</option>
+                                <option value="NEW ZEALAND-NZ">NEW ZEALAND-NZ</option>
+                                <option value="NICARAGUA-NI">NICARAGUA-NI</option>
+                                <option value="NIGER-NE">NIGER-NE</option>
+                                <option value="NIGERIA-NG">NIGERIA-NG</option>
+                                <option value="NIUE-NU">NIUE-NU</option>
+                                <option value="NORFOLK ISLAND-NF">NORFOLK ISLAND-NF</option>
+                                <option value="NORTHERN MARIANA ISLANDS-MP">NORTHERN MARIANA ISLANDS-MP</option>
+                                <option value="NORWAY-NO">NORWAY-NO</option>
+                                <option value="OMAN-OM">OMAN-OM</option>
+                                <option value="PAKISTAN-PK">PAKISTAN-PK</option>
+                                <option value="PALAU-PW">PALAU-PW</option>
+                                <option value="PALESTINIAN TERRITORY, OCCUPIED-PS">PALESTINIAN TERRITORY, OCCUPIED-PS</option>
+                                <option value="PANAMA-PA">PANAMA-PA</option>
+                                <option value="PAPUA NEW GUINEA-PG">PAPUA NEW GUINEA-PG</option>
+                                <option value="PARAGUAY-PY">PARAGUAY-PY</option>
+                                <option value="PERU-PE">PERU-PE</option>
+                                <option value="PHILIPPINES-PH">PHILIPPINES-PH</option>
+                                <option value="PITCAIRN-PN">PITCAIRN-PN</option>
+                                <option value="POLAND-PL">POLAND-PL</option>
+                                <option value="PORTUGAL-PT">PORTUGAL-PT</option>
+                                <option value="PUERTO RICO-PR">PUERTO RICO-PR</option>
+                                <option value="QATAR-QA">QATAR-QA</option>
+                                <option value="RÉUNION-RE">RÉUNION-RE</option>
+                                <option value="ROMANIA-RO">ROMANIA-RO</option>
+                                <option value="RUSSIAN FEDERATION-RU">RUSSIAN FEDERATION-RU</option>
+                                <option value="RWANDA-RW">RWANDA-RW</option>
+                                <option value="SAINT HELENA-SH">SAINT HELENA-SH</option>
+                                <option value="SAINT KITTS AND NEVIS-KN">SAINT KITTS AND NEVIS-KN</option>
+                                <option value="SAINT LUCIA-LC">SAINT LUCIA-LC</option>
+                                <option value="SAINT PIERRE AND MIQUELON-PM">SAINT PIERRE AND MIQUELON-PM</option>
+                                <option value="SAINT VINCENT AND THE GRENADINES-VC">SAINT VINCENT AND THE GRENADINES-VC</option>
+                                <option value="SAMOA-WS">SAMOA-WS</option>
+                                <option value="SAN MARINO-SM">SAN MARINO-SM</option>
+                                <option value="SAO TOME AND PRINCIPE-ST">SAO TOME AND PRINCIPE-ST</option>
+                                <option value="SAUDI ARABIA-SA">SAUDI ARABIA-SA</option>
+                                <option value="SENEGAL-SN">SENEGAL-SN</option>
+                                <option value="SERBIA-RS">SERBIA-RS</option>
+                                <option value="SEYCHELLES-SC">SEYCHELLES-SC</option>
+                                <option value="SIERRA LEONE-SL">SIERRA LEONE-SL</option>
+                                <option value="SINGAPORE-SG">SINGAPORE-SG</option>
+                                <option value="SLOVAKIA-SK">SLOVAKIA-SK</option>
+                                <option value="SLOVENIA-SI">SLOVENIA-SI</option>
+                                <option value="SOLOMON ISLANDS-SB">SOLOMON ISLANDS-SB</option>
+                                <option value="SOMALIA-SO">SOMALIA-SO</option>
+                                <option value="SOUTH AFRICA-ZA">SOUTH AFRICA-ZA</option>
+                                <option value="SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS-GS">SOUTH GEORGIA AND THE SOUTH SANDWICH ISLANDS-GS</option>
+                                <option value="SPAIN-ES">SPAIN-ES</option>
+                                <option value="SRI LANKA-LK">SRI LANKA-LK</option>
+                                <option value="SUDAN-SD">SUDAN-SD</option>
+                                <option value="SURINAME-SR">SURINAME-SR</option>
+                                <option value="SVALBARD AND JAN MAYEN-SJ">SVALBARD AND JAN MAYEN-SJ</option>
+                                <option value="SWAZILAND-SZ">SWAZILAND-SZ</option>
+                                <option value="SWEDEN-SE">SWEDEN-SE</option>
+                                <option value="SWITZERLAND-CH">SWITZERLAND-CH</option>
+                                <option value="SYRIAN ARAB REPUBLIC-SY">SYRIAN ARAB REPUBLIC-SY</option>
+                                <option value="TAIWAN-TW">TAIWAN-TW</option>
+                                <option value="TAJIKISTAN-TJ">TAJIKISTAN-TJ</option>
+                                <option value="TANZANIA, UNITED REPUBLIC OF-TZ">TANZANIA, UNITED REPUBLIC OF-TZ</option>
+                                <option value="THAILAND-TH">THAILAND-TH</option>
+                                <option value="TIMOR-LESTE-TL">TIMOR-LESTE-TL</option>
+                                <option value="TOGO-TG">TOGO-TG</option>
+                                <option value="TOKELAU-TK">TOKELAU-TK</option>
+                                <option value="TONGA-TO">TONGA-TO</option>
+                                <option value="TRINIDAD AND TOBAGO-TT">TRINIDAD AND TOBAGO-TT</option>
+                                <option value="TUNISIA-TN">TUNISIA-TN</option>
+                                <option value="TURKEY-TR">TURKEY-TR</option>
+                                <option value="TURKMENISTAN-TM">TURKMENISTAN-TM</option>
+                                <option value="TURKS AND CAICOS ISLANDS-TC">TURKS AND CAICOS ISLANDS-TC</option>
+                                <option value="TUVALU-TV">TUVALU-TV</option>
+                                <option value="UGANDA-UG">UGANDA-UG</option>
+                                <option value="UKRAINE-UA">UKRAINE-UA</option>
+                                <option value="UNITED ARAB EMIRATES-AE">UNITED ARAB EMIRATES-AE</option>
+                                <option value="UNITED KINGDOM-GB">UNITED KINGDOM-GB</option>
+                                <option value="UNITED STATES-US">UNITED STATES-US</option>
+                                <option value="UNITED STATES MINOR OUTLYING ISLANDS-UM">UNITED STATES MINOR OUTLYING ISLANDS-UM</option>
+                                <option value="URUGUAY-UY">URUGUAY-UY</option>
+                                <option value="UZBEKISTAN-UZ">UZBEKISTAN-UZ</option>
+                                <option value="VANUATU-VU">VANUATU-VU</option>
+                                <option value="VENEZUELA-VE">VENEZUELA-VE</option>
+                                <option value="VIET NAM-VN">VIET NAM-VN</option>
+                                <option value="VIRGIN ISLANDS, BRITISH-VG">VIRGIN ISLANDS, BRITISH-VG</option>
+                                <option value="VIRGIN ISLANDS, U.S.-VI">VIRGIN ISLANDS, U.S.-VI</option>
+                                <option value="WALLIS AND FUTUNA-WF">WALLIS AND FUTUNA-WF</option>
+                                <option value="WESTERN SAHARA-EH">WESTERN SAHARA-EH</option>
+                                <option value="YEMEN-YE">YEMEN-YE</option>
+                                <option value="ZAMBIA-ZM">ZAMBIA-ZM</option>
+                                <option value="ZIMBABWE-ZW">ZIMBABWE-ZW</option>
+                            </select>
+                            <span id="avinash">
+                                <script>
+                                    var country="{{ countryrule['country'] }}-{{ countryrule['countryCode'] }}";
+                                    country=country.toUpperCase();
+                                    var x=document.getElementById("countryruleUpdate*{{ countryrule['id'] }}-country").options;
+                                    countryoptions=x;
+                                    for(var i=0;i<x.length;i++){
+                                        if(x[i].value==country)
+                                            {
+                                                x[i].selected = 'selected';
+                                                break;
+                                            }
+                                    }
+                                    document.getElementById('avinash').remove();
+                                </script>
+                            </span>
+                        </td>
+                        <td style="border-bottom: 5px solid rgba(65, 61, 61, 0.715);">
+                            <select onchange="setcolor(this)" class="simple-input sel swide" id="countryruleUpdate*{{ countryrule['id'] }}-status" >
+                                {% if countryrule['status']|string=='1' %}
+                                <option value="1" selected>Allow</option>
+                                <option value="0">Block</option>
+                                {% else %}
+                                <option value="1">Allow</option>
+                                <option value="0" selected>Block</option>
+                                {% endif %}
+                            </select>
+                        </td>
+                        <td>
+                            <span onclick="delcountryrule('countryruleUpdate*{{ countryrule['id'] }}','profile{{ profile['profID'] }}')" style="padding-top: 8px;cursor: pointer;height: 12px;width: 12px!important;border-radius: 50%;background-color: red;padding-left: 12px;padding-right: 11px;padding-bottom: 6px;">X</span>
+                        </td>
+                    </tr>
+                {% endfor %} 
+            </table>
+            <span class="modern socle" onclick="Addcountryrule()">Add New Country Rule</span> 
+        </form>
+        <button style="display: inline;min-width: 250px;" class="modern socle" onclick="frmsub('profile{{ profile['profID'] }}')"><e style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;font-weight: bold;">Update</e></button> 
+        <form style="display: inline;" action="{{ url_for('dashboard.delete', id=profile['profID']) }}" method="post">
+        <input style="display: inline;color: antiquewhite!important;background-color:red!important;" class="modern socle" type="submit" value="Delete" onclick="return confirm('Are you sure?');">
+    </form>
+    <button style="float: right;cursor:pointer;position: relative;right: 0;" class="metro three-d" onclick="document.location.href='/';">Home</button>
+    <script>
+        var profID={{ profile['profID'] }};
+
+        function mapToObj(inputMap) {
+            let obj = {};
+            inputMap.forEach(function(value, key){
+                if(value instanceof Map){
+                    value = mapToObj(value);
+                }
+                obj[key] = value
+            });
+            return obj;
+        }
+
+        function frmsub(idd){
+            //ipclient update and add//
+            ipcl('Update',idd);
+            ipcl('Add',idd);
+
+            //countryrule update and add//
+            cntr('Update',idd);
+            cntr('Add',idd);
+
+
+            //submit//
+            for(var i=0;i<document.forms.length;i++){
+                if(document.forms[i].id==idd){
+                    document.forms[i].submit();
+                    break;
+                }
+            }
+        }
+
+        function delipclient(q,idd){
+            var partID=q.split("*")[1];
+            ipcl("Update",idd,w=false,role1="Del",pp=partID);
+            document.getElementById(q+"-tr").remove();
+        }
+
+        function ipcl(role,idd,w=true,role1="",pp=""){
+            if(pp!=""){
+                var ipclientstags=document.querySelectorAll("[id^='ipclient"+role+"*"+pp+"']");
+            }
+            else{
+                var ipclientstags=document.querySelectorAll("[id^='ipclient"+role+"']");
+            }
+            var ipclients=new Map();
+            console.log(ipclientstags);
+            for(var i=0;i<ipclientstags.length;i++){
+                if(ipclients.has(ipclientstags[i].id.split("-")[0])){
+                    if(ipclients.get(ipclientstags[i].id.split("-")[0]).has(ipclientstags[i].id.split("-")[1])){
+                        ipclients.get(ipclientstags[i].id.split("-")[0]).set(ipclientstags[i].id.split("-")[1],ipclientstags[i].value);
+                    }
+                    else{
+                        ipclients.get(ipclientstags[i].id.split("-")[0]).set(ipclientstags[i].id.split("-")[1],ipclientstags[i].value);
+                    }
+                }
+                else{
+                    ipclients.set(ipclientstags[i].id.split("-")[0],new Map());
+                    ipclients.get(ipclientstags[i].id.split("-")[0]).set(ipclientstags[i].id.split("-")[1],ipclientstags[i].value);
+                }
+            }
+            ipclients=mapToObj(ipclients);
+            console.log(ipclients);
+            var ipclientsJSON=JSON.stringify(ipclients);
+            var ww = document.createElement('input');
+            ww.type='hidden';
+            if(w){ww.name='ipclient'+role;}
+            else{ww.name='ipclient'+role1;}
+            ww.value+=ipclientsJSON;
+            var rt=document.getElementsByName(ww.name);
+            if(rt.length<1){
+                document.getElementById(idd).appendChild(ww);
+            }
+            else{
+                rt[0].value=rt[0].value.slice(0,rt[0].value.length-1)+","+ipclientsJSON.slice(1,ipclientsJSON.length);
+            }
+
+        }
+
+        function AddIPClient(){
+            var table=document.getElementById("profile*{{ profile['profID'] }}-IPtable");
+            var tr = document.createElement('tr');
+            var td1 = document.createElement('td');
+            var td2 = document.createElement('td');
+            var td3 = document.createElement('td');
+            var td4 = document.createElement('td');
+            var ip = document.createElement('input');
+            ip.id="ipclientAdd"+profID+"-ip";
+            ip.setAttribute('class', 'simple-input');
+            ip.required=true;
+            var sel = document.createElement('select');
+            sel.id="ipclientAdd"+profID+"-status";
+            sel.setAttribute('class','simple-input sel swide');
+            sel.required=true;
+            sel.style.backgroundColor="rgba(213, 16, 16, 0.311)";
+            var op1 = document.createElement('Option');
+            op1.value=0;
+            op1.innerText='Block';
+            var op2 = document.createElement('Option');
+            op2.value=1;
+            op2.innerText='Allow';
+
+            td3.innerText='➤';
+            td3.style.maxWidth='20px';
+
+            sel.appendChild(op1);
+            sel.appendChild(op2);
+            td1.appendChild(ip);
+            td2.appendChild(sel);
+            var delbhtml = '<span onclick="this.parentNode.parentNode.remove();" style="padding-top: 8px;cursor: pointer;height: 12px;width: 12px!important;border-radius: 50%;background-color: yellow;padding-left: 12px;padding-right: 11px;padding-bottom: 6px;">X</span>';
+            td4.appendChild(htmltonode(delbhtml));
+            tr.appendChild(td3);
+            tr.appendChild(td1);
+            tr.appendChild(td2);
+            tr.appendChild(td4);
+            table.appendChild(tr);
+        }
+        
+        function htmltonode(ss){
+            var div = document.createElement('div');
+            div.innerHTML = ss.trim();
+            return div.firstChild;
+        }
+
+        function Addcountryrule(){
+            var table=document.getElementById("profile*{{ profile['profID'] }}-Countrytable");
+            var tr = document.createElement('tr');
+            var td1 = document.createElement('td');
+            var td2 = document.createElement('td');
+            var td3 = document.createElement('td');
+            var td4 = document.createElement('td');
+            var ip = document.createElement('select');
+            ip.id="countryruleAdd"+profID+"-country";
+            ip.setAttribute('class', 'simple-input sel wide');
+            ip.required=true;
+            var opl=countryoptions.length;
+            for(var i=0;i<opl;i++){
+                var node= htmltonode(countryoptions[i].outerHTML);
+                ip.appendChild(node);
+            }
+            var sel = document.createElement('select');
+            sel.id="countryruleAdd"+profID+"-status";
+            sel.setAttribute('class','simple-input sel swide');
+            sel.required=true;
+            sel.style.backgroundColor="rgba(213, 16, 16, 0.311)";
+            var op1 = document.createElement('Option');
+            op1.value=0;
+            op1.innerText='Block';
+            var op2 = document.createElement('Option');
+            op2.value=1;
+            op2.innerText='Allow';
+
+            td3.innerText='➤';
+            td3.style.maxWidth='20px';
+
+            sel.appendChild(op1);
+            sel.appendChild(op2);
+            td1.appendChild(ip);
+            td2.appendChild(sel);
+            var delbhtml = '<span onclick="this.parentNode.parentNode.remove();" style="padding-top: 8px;cursor: pointer;height: 12px;width: 12px!important;border-radius: 50%;background-color: yellow;padding-left: 12px;padding-right: 11px;padding-bottom: 6px;">X</span>';
+            td4.appendChild(htmltonode(delbhtml));
+            tr.appendChild(td3);
+            tr.appendChild(td1);
+            tr.appendChild(td2);
+            tr.appendChild(td4);
+            table.appendChild(tr);
+        }
+        
+        function delcountryrule(q,idd){
+            var partID=q.split("*")[1];
+            cntr("Update",idd,w=false,role1="Del",pp=partID);
+            document.getElementById(q+"-tr").remove();
+        }
+
+        function cntr(role,idd,w=true,role1="",pp=""){
+            if(pp!=""){
+                var countryruletags=document.querySelectorAll("[id^='countryrule"+role+"*"+pp+"']");
+            }
+            else{
+                var countryruletags=document.querySelectorAll("[id^='countryrule"+role+"']");
+            }
+            var countryrules=new Map();
+            console.log(countryruletags);
+            for(var i=0;i<countryruletags.length;i++){
+                if(countryrules.has(countryruletags[i].id.split("-")[0])){
+                    if(countryrules.get(countryruletags[i].id.split("-")[0]).has(countryruletags[i].id.split("-")[1])){
+                        countryrules.get(countryruletags[i].id.split("-")[0]).set(countryruletags[i].id.split("-")[1],countryruletags[i].value);
+                    }
+                    else{
+                        countryrules.get(countryruletags[i].id.split("-")[0]).set(countryruletags[i].id.split("-")[1],countryruletags[i].value);
+                    }
+                }
+                else{
+                    countryrules.set(countryruletags[i].id.split("-")[0],new Map());
+                    countryrules.get(countryruletags[i].id.split("-")[0]).set(countryruletags[i].id.split("-")[1],countryruletags[i].value);
+                }
+            }
+            countryrules=mapToObj(countryrules);
+            console.log(countryrules);
+            var countryrulesJSON=JSON.stringify(countryrules);
+            var ww = document.createElement('input');
+            ww.type='hidden';
+            if(w){ww.name='countryrule'+role;}
+            else{ww.name='countryrule'+role1;}
+            ww.value+=countryrulesJSON;
+            var rt=document.getElementsByName(ww.name);
+            if(rt.length<1){
+                document.getElementById(idd).appendChild(ww);
+            }
+            else{
+                rt[0].value=rt[0].value.slice(0,rt[0].value.length-1)+","+countryrulesJSON.slice(1,countryrulesJSON.length);
+            }
+
+        }
+
+        function setcolor(v){
+            if(v.value=='0'){
+                v.style.backgroundColor="rgba(213, 16, 16, 0.311)";
+            }
+            else{
+                v.style.backgroundColor="rgba(247, 247, 247, 0.537)";
+            }
+        }
+        
+        //setcolor on load
+        var allselect=document.getElementsByTagName('select');
+        for(var i=0;i<allselect.length;i++){
+            setcolor(allselect[i]);
+        }
+    </script>
+{% endblock %}
