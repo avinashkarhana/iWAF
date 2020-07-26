@@ -4,14 +4,14 @@ Intelligent Web Application Firewall
 ## RUN
 
 ### In one terminal/cmd in `iWaf` directory
-cd iwaf
-pip3 install -r requirements.txt
-export FLASK_APP=wafDashboard &
-flask run
+> cd iwaf
+> pip3 install -r requirements.txt
+> export FLASK_APP=wafDashboard &
+> flask run
 
 ### In another terminal/cmd in `iWaf` directory
-cd iwaf
-python3 server.py {port any of choice} {DEBUG if required}
+> cd iwaf
+>> python3 server.py {port any of choice} {DEBUG if required}
 
 ## Contents
 
