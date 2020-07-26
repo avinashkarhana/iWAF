@@ -1,1 +1,5 @@
 .DS_Store
+SQL injection detection using ML.ipynb
+sqli.csv
+benign_for_training.txt
+sqli_for_training.txt
