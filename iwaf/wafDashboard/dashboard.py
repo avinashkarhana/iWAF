@@ -14,6 +14,9 @@ import traceback
 
 bp = Blueprint("dashboard", __name__)
 
+def get_curserv():
+    curserv=get_db().execute("SELECT host,port FROM CURSERV").fetchone()
+    return curserv
 
 @bp.route('/')
 @login_required
@@ -22,7 +25,8 @@ def index():
     profiles = db.execute(
         'SELECT * from wafrules'
     ).fetchall()
-    return render_template('index.html', curprof=get_curprof() ,profiles=profiles)
+
+    return render_template('index.html', curserv=get_curserv(), curprof=get_curprof() ,profiles=profiles)
 
 
 def get_profile(id):
@@ -412,6 +416,18 @@ def setcurprof():
     db = get_db()
     profID=request.form['curprof']
     qr="UPDATE CURPROF SET profID="+str(profID)+" WHERE profID ="+str(get_curprof())
+    print("#############################################",qr)
+    db.execute(qr)
+    db.commit()
+    return redirect(url_for("dashboard.index"))
+
+@bp.route("/setcurserv", methods=("POST",))
+@login_required
+def setcurserv():
+    db = get_db()
+    host=request.form['curservhost']
+    port=request.form['curservport']
+    qr="UPDATE CURSERV SET host='"+str(host)+"' , port="+str(port)
     print("#############################################",qr)
     db.execute(qr)
     db.commit()

@@ -1,5 +1,17 @@
-# WAF
-Web Application Firewall
+# iWAF
+Intelligent Web Application Firewall
+
+## RUN
+
+### In one terminal/cmd in `iWaf` directory
+cd iwaf
+pip3 install -r requirements.txt
+export FLASK_APP=wafDashboard &
+flask run
+
+### In another terminal/cmd in `iWaf` directory
+cd iwaf
+python3 server.py {port any of choice} {DEBUG if required}
 
 ## Contents
 
@@ -65,7 +77,7 @@ Firewall as follows
 ##### •```Making system immune to data tampering.```
 ##### •```Reducing runtime errors in applications due to user data.```
 ##### •```Robust.```
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/Visitor.png?raw=true "WAF")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/Visitor.png?raw=true "WAF")
 ```
 Figure 1: Web Application Firewall WAF
 ```
@@ -93,7 +105,7 @@ filter potential attack requests. Hence after refining filter rules and modifica
 ahead of the actual web application server to work on behalf of it
 
 mitigating any kind of threat.
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/server.py.png?raw=true "WAF")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/server.py.png?raw=true "WAF")
 ```
 Figure 2: Code Sample
 ```
@@ -141,7 +153,7 @@ features required including socket level programming, which is the key factor to
 requests and filter non-legit ones from legit request and protect the web application from attacks
 
 that could be a potential threat to data.
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/page4image12632480.png?raw=true "Python")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/page4image12632480.png?raw=true "Python")
 ```
 Figure 3: Python as a programming language
 ```
@@ -163,7 +175,7 @@ Before any device is connected to your network, make sure that you have document
 network infrastructure and hardened the device or the box it will run on. This means applying
 
 patches as well as taking the time to configure the device for increased security.
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/Destination.png?raw=true "WAF")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/Destination.png?raw=true "WAF")
 
 #### 1. Pros of using this application-level firewall system
 
@@ -197,22 +209,22 @@ The software specifications for this type of system are as follow
 The whole project works on a few modules such as
 
 #### 5.2.1 Web Proxy Server
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/WAF%20%24%20python3%20server.py%208888%20debug.png?raw=true "WAF")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/WAF%20%24%20python3%20server.py%208888%20debug.png?raw=true "WAF")
 ```
 Figure 4: WAF Proxy
 ```
 #### 5.2.2 Filter Rules (Filtering)
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/pythons%20server.py%208888%20debug.png?raw=true "WAF")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/pythons%20server.py%208888%20debug.png?raw=true "WAF")
 ```
 Figure 5: WAF Filter
 ```
 
 #### 5.2.3 Intrusion Log
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/LOG.png?raw=true "WAF")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/LOG.png?raw=true "WAF")
 ```
 Figure 6: WAF Log File
 ```
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/LOG2.png?raw=true "WAF")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/LOG2.png?raw=true "WAF")
 ```
 Figure 7: WAF Log
 ```
@@ -231,7 +243,7 @@ Case 1 : Legit Request
 ##### ➢```Visitor address : 192.168.43.60```
 ##### ➢```Page visited : root(http://127.0.0.1:8888/)```
 ##### ➢```Request : GET / HTTP/1.1 (LEGIT)```
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/case1.png?raw=true "WAF")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/case1.png?raw=true "WAF")
 ```
 ! Result : Not Filtered
 ```
@@ -245,7 +257,7 @@ Case 2 : Attacker Request
 ##### ➢```Page visited : root(http://127.0.0.1:8888/cbcs2016/app_main.php)```
 ##### ➢```Request : POST /cbcs2016/app_main.php HTTP/1.```
 {arguments: ?user_id=1+AND+SELECT+*+FROM+USER&pass=1} (SQL INJECTION)
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/case2.png?raw=true "WAF")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/case2.png?raw=true "WAF")
 ```
 ! Result : Filtered And Logged
 ```
@@ -258,7 +270,7 @@ Case 3 : Unwanted Request from blocked IP
 ##### ➢```Visitor address : 192.168.43.131```
 ##### ➢```Page visited : root(http://127.0.0.1:8888/)```
 ##### ➢```Request : POST / HTTP/1.1 (UNKNOWN)```
-![alt text](https://github.com/avinashkarhana/WAF/blob/master/tmp/case3.png?raw=true "WAF")
+![alt text](https://github.com/avinashkarhana/iWAF/blob/master/iwaf/tmp/case3.png?raw=true "WAF")
 ```
 ! Result : Filtered
 ```

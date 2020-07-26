@@ -1,10 +1,12 @@
 <!doctype html>
 <title>{% block title %}{% endblock %} - WAF Dashboard</title>
+<link rel="shortcut icon" type="image/x-icon" href="{{ url_for('static', filename='icon.png') }}" />
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <body style="background: #ddd url({{ url_for('static', filename='bg.jpg') }}) repeat top left;
 background-image: url({{ url_for('static', filename='bg.jpg') }});">
   <nav>
-    <h1>WAF Dashboard</h1>
+    <img src ="{{ url_for('static', filename='icon.png') }}" height="157" >
+    <h1 style="font-size: 72px;margin-left: 22%;"><w style="font-size: 72px;background: -webkit-linear-gradient(rgb(245, 64, 64), rgb(30, 12, 235));-webkit-background-clip: text;-webkit-text-fill-color: transparent;">iWAF</w> Dashboard</h1>
     <ul>
       {% if g.user %}
         <li><span>{{ g.user['username'] }}</span>

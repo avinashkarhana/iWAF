@@ -14,7 +14,10 @@ zop = Intelligent()
 ####################################################################
 ####################### Default Configuration START#################
 ####################################################################
-
+FIREWALL_PORT=8080
+FIREWALL_HOST=''
+CURRENT_SERVER_HOST="online.hnbgu.ac.in" # Current application server host
+CURRENT_SERVER_PORT=80       # Current application port
 DEBUG = False                # debug mode to see all debug messages
 ALLOWED_CLIENTS = []         # Allowed Clients
 BLOCKED_CLIENTS = []         # BLOCKED clients
@@ -60,6 +63,14 @@ def prthread(conn, client_addr):
     # capture request from client
     request = conn.recv(MAX_RCV)
     result = request.find(b'\r\n\r\n')
+
+    # reject selflooping request when firewall and application host:port are set same by mistake
+    if (FIREWALL_HOST==CURRENT_SERVER_HOST and FIREWALL_PORT==CURRENT_SERVER_PORT) or (FIREWALL_HOST=='' and CURRENT_SERVER_HOST=='127.0.0.1' and FIREWALL_PORT==CURRENT_SERVER_PORT):
+        conn.send(b"\r\nHTTP/1.1 200 OK\r\n\r\n<h1>Snake is biting it's own Tail !!</h1>\r\n")
+        conn.close()
+        try:sys.exit(1)
+        except SystemExit:sys.exit(1)
+        except:pass
     
     # parse the first line
     first_line = request.split(b'\n')[0]
@@ -239,9 +250,9 @@ def prthread(conn, client_addr):
     # LOGGING END
     
     #Web Application address
-    webserver = "online.hnbgu.ac.in"
+    webserver = CURRENT_SERVER_HOST
     #Web Application port
-    port = 80
+    port = CURRENT_SERVER_PORT
     if port!=80:port1=":"+str(port)
     else:port1=''
     
@@ -309,6 +320,7 @@ def dbthread(arg):
         conn = sqlite3.connect('waf.db')
         conn.row_factory = dict_factory
         while True:
+            #updating profileID
             try:
                 if not force:
                     c = conn.cursor()
@@ -316,6 +328,20 @@ def dbthread(arg):
                     qres=c.fetchone()
                     c.close()
                     profid=qres['profID']
+            except:
+                traceback.print_exc()
+                pass
+
+            #updating server host and port
+            try:
+                c = conn.cursor()
+                c.execute("SELECT host,port FROM CURSERV")
+                qres=c.fetchone()
+                c.close()
+                global CURRENT_SERVER_HOST
+                global CURRENT_SERVER_PORT
+                CURRENT_SERVER_HOST=qres['host']
+                CURRENT_SERVER_PORT=qres['port']
             except:
                 traceback.print_exc()
                 pass
@@ -491,6 +517,11 @@ def main():
 
     try:
         # create a socket
+        global FIREWALL_HOST
+        global FIREWALL_PORT
+        FIREWALL_HOST=host
+        FIREWALL_PORT=port
+
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # set address and port reuse
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

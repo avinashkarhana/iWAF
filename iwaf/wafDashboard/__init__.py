@@ -7,7 +7,7 @@ def create_app(test_config=None):
     new=str(app.instance_path)[:-8]
     app.config.from_mapping(
         SECRET_KEY='187236!&*^#!#^!*736*&!@^#*&@!^#!^@#*^!@638t37534rzrfv16erv7',
-        DATABASE=os.path.join(new, "waf.db"),
+        DATABASE=os.path.join(new, "iwaf/waf.db"),
     )
 
     # ensure the instance folder exists

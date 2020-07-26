@@ -1,8 +1,16 @@
 {% extends 'base.html' %}
 
 {% block header %}
+    <br>
   <h1 style="background: lightgray;text-align: center;">{% block title %}Profiles{% endblock %}</h1><hr>
   {% if g.user %}
+    <div style="text-align: center;">
+        <form style="display: inline-block;" action="{{ url_for('dashboard.setcurserv') }}" method="POST">
+            <b>Current Server Host: </b> <input name='curservhost' value="{{ curserv['host'] }}" />
+            <b>Current Server PORT: </b> <input name='curservport' value="{{ curserv['port'] }}" /><br>
+            <input style="display: inline;color: antiquewhite!important;background-color:red!important;" class="modern socle" type="submit" value="Update" onclick="return confirm('Are you sure?');">
+        </form>
+    </div>
     <a class="metro three-d" href="{{ url_for('dashboard.create') }}">Create New Profile</a>
     <form style="right: 0;float:right;display: inline;" action="{{ url_for('dashboard.setcurprof') }}" method="POST">
         <b>Current Working Profile: </b> <select onchange="this.parentNode.submit()" class="simple-input sel wide" style="right: 0;float:right;display: inline;" name='curprof'>
@@ -35,11 +43,11 @@
                     <td>Max. size of request(bytes)</td>
                 </tr>
                 <tr>
-                    <td><div class="demo-wrapper"><input type='text' readonly class="simple-input" style="width: 20px!important" value='{{ request.form['profID'] or profile['profID'] }}''></td>
+                    <td><div class="demo-wrapper"><input type='text' readonly class="simple-input" style="width: 20px!important" value='{{ request.form['profID'] or profile['profID'] }}'></td>
                     <td><div class="demo-wrapper"><input class="simple-input" name="title" value="{{ request.form['title'] or profile['title'] }}" required></td>
                     <td><textarea style="margin-top: 2px!important;border: 4px solid #F1B720;height: 32px;border-radius: 5px;"  name="description" >{{ request.form['description'] or profile['description'] }}</textarea></td>
                     <td>
-                        <select class="simple-input sel" style="min-width:170px!important;max-width: 170px;" name="onlyallowedip" type="text" value="{{ request.form['onlyallowedip'] or profile['onlyallowedip'] }}" required>
+                        <select disabled class="simple-input sel" style="min-width:170px!important;max-width: 170px;" name="onlyallowedip" type="text" value="{{ request.form['onlyallowedip'] or profile['onlyallowedip'] }}" required>
                             {% if profile['onlyallowedip']==1 %}
                             <option value="1" selected>On</option>
                             <option value="0">Off</option>
@@ -50,7 +58,7 @@
                         </select>
                     </td>
                     <td>
-                        <select class="simple-input sel" style="min-width:170px!important;max-width: 170px;" name="onlyallowedcountries" type="text" value="{{ request.form['onlyallowedcountries'] or profile['onlyallowedcountries'] }}" required>
+                        <select disabled class="simple-input sel" style="min-width:170px!important;max-width: 170px;" name="onlyallowedcountries" type="text" value="{{ request.form['onlyallowedcountries'] or profile['onlyallowedcountries'] }}" required>
                             {% if profile['onlyallowedcountries']==1 %}
                             <option value="1" selected>On</option>
                             <option value="0">Off</option>
@@ -61,7 +69,7 @@
                         </select>
                     </td>
                     <td>
-                        <select class="simple-input sel" style="min-width:116px!important;max-width: 210px;" name="proxyblock" type="text" value="{{ request.form['proxyblock'] or profile['proxyblock'] }}" required>
+                        <select disabled class="simple-input sel" style="min-width:116px!important;max-width: 210px;" name="proxyblock" type="text" value="{{ request.form['proxyblock'] or profile['proxyblock'] }}" required>
                             {% if profile['proxyblock']==1 %}
                             <option value="1" selected>On</option>
                             <option value="0">Off</option>
@@ -72,7 +80,7 @@
                         </select>
                     </td>
                     <td>
-                        <select class="simple-input sel" style="min-width:90px!important;max-width: 210px;" name="intelligenttest" type="text" value="{{ request.form['intelligenttest'] or profile['intelligenttest'] }}" required>
+                        <select disabled class="simple-input sel" style="min-width:90px!important;max-width: 210px;" name="intelligenttest" type="text" value="{{ request.form['intelligenttest'] or profile['intelligenttest'] }}" required>
                             {% if profile['intelligenttest']==1 %}
                             <option value="1" selected>On</option>
                             <option value="0">Off</option>
@@ -83,7 +91,7 @@
                         </select>
                     </td>
                     <td>
-                        <select class="simple-input sel" style="min-width:120px!important;max-width: 120px;" name="intelligentmode" type="text" value="{{ request.form['intelligentmode'] or profile['intelligentmode'] }}" required>
+                        <select disabled class="simple-input sel" style="min-width:120px!important;max-width: 120px;" name="intelligentmode" type="text" value="{{ request.form['intelligentmode'] or profile['intelligentmode'] }}" required>
                             {% if profile['intelligentmode']=='NORMAL' %}
                             <option value="NORMAL" selected>Normal</option>
                             <option value="HARD">Hard</option>
@@ -134,6 +142,7 @@
             document.getElementById(id.id+"Delete").style.display="inline";
             for (var i = 0, len = elements.length; i < len; ++i) {
                 elements[i].readOnly = false;
+                elements[i].disabled = false;
                 elements[i].style.display = 'inline';
             }
 
