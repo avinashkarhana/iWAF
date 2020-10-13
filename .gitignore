@@ -3,3 +3,7 @@ SQL injection detection using ML.ipynb
 sqli.csv
 benign_for_training.txt
 sqli_for_training.txt
+.vscode/settings.json
+iwaf/intelligent/wandb/
+iwaf/intelligent/Final-SQLI-Model.h5
+iwaf/intelligent/Final-SQLI-Vectorizer
