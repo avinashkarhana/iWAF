@@ -1,0 +1,32 @@
+{
+    "os": "macOS-10.15.7-x86_64-i386-64bit",
+    "python": "3.8.2",
+    "heartbeatAt": "2020-09-28T15:55:40.987868",
+    "startedAt": "2020-09-28T15:55:33.034279",
+    "docker": null,
+    "cpu_count": 4,
+    "cuda": null,
+    "args": [
+        "--ip=127.0.0.1",
+        "--stdin=9003",
+        "--control=9001",
+        "--hb=9000",
+        "--Session.signature_scheme=\"hmac-sha256\"",
+        "--Session.key=b\"4b567d6f-6ad3-4d0b-a251-fa75c52a5f25\"",
+        "--shell=9002",
+        "--transport=\"tcp\"",
+        "--iopub=9004",
+        "--f=/var/folders/t7/6p0zfk9n6ps99y7z51j6j_9h0000gn/T/tmp-31017xkFfVubEovf.json"
+    ],
+    "state": "running",
+    "program": "<python with no main file>",
+    "git": {
+        "remote": "https://github.com/avinashkarhana/iWAF.git",
+        "commit": "d66bbf5488486e2c1089a77bb5db916872b7ecb9"
+    },
+    "email": null,
+    "root": "/Users/avinashkarhana/Documents/GIT/iWAF",
+    "host": "Avinashs-MacBook-Air.local",
+    "username": "avinashkarhana",
+    "executable": "/Library/Developer/CommandLineTools/usr/bin/python3"
+}

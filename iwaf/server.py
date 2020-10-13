@@ -360,6 +360,8 @@ def dbthread(arg):
                 #check for OnlyaAllowedIP flag
                 if profile['onlyallowedip']==1:
                     global OnlyAllowedIP
+                    if OnlyAllowedIP==False:
+                        trace('Changed OnlyAllowedIP Flag to True')
                     global ALLOWED_CLIENTS
                     OnlyAllowedIP = True
                     #update ALLOWED_CLIENTS list as per profile
@@ -372,10 +374,14 @@ def dbthread(arg):
                     ALLOWED_CLIENTS += qer
                     c.close()
                 else:
+                    if OnlyAllowedIP:
+                        trace('Changed OnlyAllowedIP Flag to False')
                     OnlyAllowedIP = False
                 #check for OnlyaAllowedCountry flag
                 if profile['onlyallowedcountries']==1:
                     global OnlyAllowedCountries
+                    if OnlyAllowedCountries==False:
+                        trace('Changed OnlyAllowedCountries Flag to True')
                     global ALLOWED_COUNTRIES
                     OnlyAllowedCountries = True
                     #update ALLOWED_CLIENTS list as per profile
@@ -388,18 +394,28 @@ def dbthread(arg):
                     ALLOWED_COUNTRIES += qer
                     c.close()
                 else:
+                    if OnlyAllowedCountries:
+                        trace('Changed OnlyAllowedCountries Flag to False')
                     OnlyAllowedCountries = False
                 #check for Proxy Block flag
                 if profile['proxyblock']==1:
                     global PROXY_BLOCK
+                    if PROXY_BLOCK==False:
+                        trace('Changed ProxyBlock Flag to True')
                     PROXY_BLOCK = True
                 else:
+                    if PROXY_BLOCK:
+                        trace('Changed ProxyBlock Flag to False')
                     PROXY_BLOCK = False
                 #check for intelligent test flag
                 if profile['intelligenttest']==1:
                     global INTELLIGENT_REQ_TEST
+                    if INTELLIGENT_REQ_TEST==False:
+                        trace('Changed INTELLIGENT_REQ_TEST Flag to True')
                     INTELLIGENT_REQ_TEST = True
                 else:
+                    if INTELLIGENT_REQ_TEST:
+                        trace('Changed INTELLIGENT_REQ_TEST Flag to False')
                     INTELLIGENT_REQ_TEST = False
                 
                 #set number of request to hold
