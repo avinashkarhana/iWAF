@@ -5,14 +5,18 @@ Intelligent Web Application Firewall
 
 ### In one terminal/cmd in `iWaf` directory
 > cd iwaf
+
 > pip3 install -r requirements.txt
-> export FLASK_APP=wafDashboard &
+
+> export FLASK_APP=wafDashboard
+
 > flask run
 (This starts dashboard for firewall profile and filter managenemt) Username:Password :: WAFAdmin:DemoWAFuser
 
 ### In another terminal/cmd in `iWaf` directory
 > cd iwaf
->> python3 server.py {port any of choice} {DEBUG if required}
+
+> python3 server.py {port any of choice} {DEBUG if required}
 
 ## Contents
 
