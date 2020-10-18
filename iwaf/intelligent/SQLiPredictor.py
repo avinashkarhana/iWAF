@@ -4,8 +4,10 @@ import tensorflow.keras as keras
 from tensorflow.keras.models import load_model
 import pickle
 class Intelligent:
-    mymodel = load_model('./intelligent/Final-SQLI-Model.h5')
-    myvectorizer = pickle.load(open("./intelligent/Final-SQLI-Vectorizer", 'rb'))
+    #mymodel = load_model('./intelligent/Final-SQLI-Model.h5')
+    mymodel = load_model('./intelligent/binary_crossentropy@adam-Final-SQLI-Model.h5')
+    #myvectorizer = pickle.load(open("./intelligent/Final-SQLI-Vectorizer", 'rb'))
+    myvectorizer = pickle.load(open("./intelligent/New-Final-SQLI-Vectorizer", 'rb'))
 
     def predict_sqli_attack(self,input_val=0,verbose=False):
         def clean_data(inp):
@@ -58,9 +60,15 @@ class Intelligent:
         if input_val== '0':
             repeat=False    
         
+        '''# Old Vectorizer
         input_val=clean_data(input_val)
         input_val=[input_val]
         input_val=self.myvectorizer.transform(input_val).toarray()
+        '''
+
+        # New Vectorizer
+        input_val=myvectorizer(input_val)
+
         result=self.mymodel.predict(input_val)
         out(beautify) 
 
