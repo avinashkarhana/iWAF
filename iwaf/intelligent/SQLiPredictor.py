@@ -2,7 +2,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow.keras as keras
 from tensorflow.keras.models import load_model
-import pickle
+import dill as pickle
 class Intelligent:
     #mymodel = load_model('./intelligent/Final-SQLI-Model.h5')
     mymodel = load_model('./intelligent/binary_crossentropy@adam-Final-SQLI-Model.h5')
