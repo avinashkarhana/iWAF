@@ -78,7 +78,7 @@ def prthread(conn, client_addr):
     sta=request[:result+4]
     act=request[result+4:]
 
-    failattemtmsg=b"\r\nHTTP/1.1 200 OK\r\n\r\n<h1>Web Application Firewall Detected Suspecious activity !!</h1>\r\n"
+    failattemtmsg=b"Web Application Firewall Detected Suspecious activity !!\r\n"
     
     ###################################################
     ###############Apply WAF rules START###############
