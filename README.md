@@ -4,9 +4,9 @@ Intelligent Web Application Firewall
 ## RUN
 
 ### In one terminal/cmd in `iWaf` directory
-> cd iwaf
-
 > pip3 install -r requirements.txt
+
+> cd iwaf
 
 > export FLASK_APP=wafDashboard
 

@@ -66,42 +66,37 @@ def prthread(conn, client_addr):
 
     # reject selflooping request when firewall and application host:port are set same by mistake
     if (FIREWALL_HOST==CURRENT_SERVER_HOST and FIREWALL_PORT==CURRENT_SERVER_PORT) or (FIREWALL_HOST=='' and CURRENT_SERVER_HOST=='127.0.0.1' and FIREWALL_PORT==CURRENT_SERVER_PORT):
-        conn.send(b"\r\nHTTP/1.1 200 OK\r\n\r\n<h1>Snake is biting it's own Tail !!</h1>\r\n")
-        conn.close()
-        try:sys.exit(1)
-        except SystemExit:sys.exit(1)
-        except:pass
-    
+        send_response(
+            conn,
+            b"\r\nHTTP/1.1 200 OK\r\n\r\n<h1>Snake is biting it's own Tail !!</h1>\r\n",
+        )
+
     # parse the first line
     first_line = request.split(b'\n')[0]
 
     sta=request[:result+4]
     act=request[result+4:]
 
-    failattemtmsg=b"Web Application Firewall Detected Suspecious activity !!\r\n"
-    
+    failAttemptMsg=b"\r\nHTTP/1.1 200 OK\r\n\r\nWeb Application Firewall Detected Suspecious activity !!\r\n"
+
     ###################################################
     ###############Apply WAF rules START###############
     ###################################################
 
     # Country based filtering START
     try:
-        if OnlyAllowedCountries:
-            if ipdetails['countryCode'] not in ALLOWED_COUNTRIES:
-                infoOut("[BLOCKED]Country Blocked("+ipdetails['country']+")",first_line,client_addr)
-                conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n')
-                conn.close()
-                try:sys.exit(1)
-                except SystemExit:sys.exit(1)
-                except:pass
-        else:
-            if ipdetails['countryCode'] in BLOCKED_COUNTRY:
-                infoOut("[BLOCKED]Country Blocked("+ipdetails['country']+")",first_line,client_addr)
-                conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n')
-                conn.close()
-                try:sys.exit(1)
-                except SystemExit:sys.exit(1)
-                except:pass
+        if (
+            OnlyAllowedCountries
+            and ipdetails['countryCode'] not in ALLOWED_COUNTRIES
+            or not OnlyAllowedCountries
+            and ipdetails['countryCode'] in BLOCKED_COUNTRY
+        ):
+            infoOut("[BLOCKED]Country Blocked("+ipdetails['country']+")",first_line,client_addr)
+            send_response(
+                conn,
+                b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n',
+            )
+
     except SystemExit:sys.exit(1)
     except:
         trace("Country based filtering Failed !")
@@ -111,11 +106,11 @@ def prthread(conn, client_addr):
     try:
         if ipdetails['proxy']==True and PROXY_BLOCK:
             infoOut("[BLOCKED]PROXY IP",first_line,client_addr)
-            conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service can not be used with proxy !!</h1>\r\n')
-            conn.close()
-            try:sys.exit(1)
-            except SystemExit:sys.exit(1)
-            except:pass
+            send_response(
+                conn,
+                b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service can not be used with proxy !!</h1>\r\n',
+            )
+
     except SystemExit:sys.exit(1)
     except:
         trace("Proxy IP check Failed !")
@@ -123,22 +118,18 @@ def prthread(conn, client_addr):
 
     # IP Based Filtering START
     try:
-        if OnlyAllowedIP:
-            if client_addr[0] not in ALLOWED_CLIENTS:
-                infoOut("[BLOCKED]IP Blacklisted",first_line,client_addr)
-                conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n')
-                conn.close()
-                try:sys.exit(1)
-                except SystemExit:sys.exit(1)
-                except:pass
-        else:
-            if client_addr[0] in BLOCKED_CLIENTS:
-                infoOut("[BLOCKED]IP Blacklisted",first_line,client_addr)
-                conn.send(b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n')
-                conn.close()
-                try:sys.exit(1)
-                except SystemExit:sys.exit(1)
-                except:pass
+        if (
+            OnlyAllowedIP
+            and client_addr[0] not in ALLOWED_CLIENTS
+            or not OnlyAllowedIP
+            and client_addr[0] in BLOCKED_CLIENTS
+        ):
+            infoOut("[BLOCKED]IP Blacklisted",first_line,client_addr)
+            send_response(
+                conn,
+                b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n',
+            )
+
     except SystemExit:sys.exit(1)
     except:
         trace("IP Based Filtering Failed !")
@@ -152,18 +143,18 @@ def prthread(conn, client_addr):
     except:
         trace("Special Character Sanitization Failed !")
     #special Character Sanitisation END
-    
+
     #SQL Injection Check START
     try:
         act1=act.upper()
         zw=SQL_Injection_Rules
         for qw in zw:
             if qw in act1 :
-                conn.send(failattemtmsg)
+                conn.send(failAttemptMsg)
                 conn.close()
                 infoOut("[BLOCKED]SQL Injection",first_line,client_addr)
-                with open('intrusion.log','a+') as intrusionlogfile:
-                    intrusionlogfile.write("SQL Injection(REGEX)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act)+"\n")
+                with open('intrusion.log','a+') as intrusionLogFile:
+                    intrusionLogFile.write("\nSQL Injection(REGEX)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act)+"\n")
                 try:sys.exit(1)
                 except SystemExit:sys.exit(1)
                 except:pass
@@ -171,15 +162,15 @@ def prthread(conn, client_addr):
         first_line1=first_line.upper()
         for qw in zw:
             if qw in first_line1 :
-                conn.send(failattemtmsg)
+                conn.send(failAttemptMsg)
                 conn.close()
                 infoOut("[BLOCKED]SQL Injection",first_line,client_addr)
-                with open('intrusion.log','a+') as intrusionlogfile:
-                    intrusionlogfile.write("SQL Injection(REGEX)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
+                with open('intrusion.log','a+') as intrusionLogFile:
+                    intrusionLogFile.write("\nSQL Injection(REGEX)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
                 try:sys.exit(1)
                 except SystemExit:sys.exit(1)
                 except:pass
-        
+
         sta=sta.replace(b'&frasl;',b'/')
         request=sta+act
     except SystemExit:sys.exit(1)
@@ -195,16 +186,16 @@ def prthread(conn, client_addr):
             if len(str(act))>3:
                 try:
                     tu=str(act).split(" ")[1].split("?")[1]
-                    intelliresult=zop.predict_sqli_attack(input_val=tu)
+                    intelliResult=zop.predict_sqli_attack(input_val=tu)
                     uui=True
                 except:
                     uui=False
-                if uui and intelliresult>INTELLIGENT_THRESHOLD[INELLIGENT_MODE.upper()]:
-                    conn.send(failattemtmsg+b'i')
+                if uui and intelliResult>INTELLIGENT_THRESHOLD[INELLIGENT_MODE.upper()]:
+                    conn.send(failAttemptMsg+b'i')
                     conn.close()
                     infoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection",first_line,client_addr)
-                    with open('intrusion.log','a+') as intrusionlogfile:
-                        intrusionlogfile.write("SQL Injection(INTELLIGENT)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
+                    with open('intrusion.log','a+') as intrusionLogFile:
+                        intrusionLogFile.write("\nSQL Injection(INTELLIGENT)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
                     try:sys.exit(1)
                     except SystemExit:sys.exit(1)
                     except:pass
@@ -217,11 +208,11 @@ def prthread(conn, client_addr):
                 except:
                     uui=False
                 if uui and intelliresult1>INTELLIGENT_THRESHOLD[INELLIGENT_MODE.upper()]:
-                    conn.send(failattemtmsg+b'i')
+                    conn.send(failAttemptMsg+b'i')
                     conn.close()
                     infoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection",first_line,client_addr)
-                    with open('intrusion.log','a+') as intrusionlogfile:
-                        intrusionlogfile.write("SQL Injection(INTELLIGENT)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
+                    with open('intrusion.log','a+') as intrusionLogFile:
+                        intrusionLogFile.write("\nSQL Injection(INTELLIGENT)❡"+str(first_line)+"❡"+str(client_addr[0])+":"+str(client_addr[1])+"❡"+str(sta+act))
                     try:sys.exit(1)
                     except SystemExit:sys.exit(1)
                     except:pass
@@ -241,28 +232,25 @@ def prthread(conn, client_addr):
         else:
             z=" Country : "+ipdetails['country']+" ("+ipdetails['regionName']+")"
             if ipdetails['proxy']=='true':z+=" [PROXY]"
-        cadd=[]
-        cadd.append(client_addr[0])
+        cadd = [client_addr[0]]
         cadd[0]+=z
         infoOut("Request",first_line,cadd)
     except:
         trace("Logging Failed !")
     # LOGGING END
-    
+
     #Web Application address
     webserver = CURRENT_SERVER_HOST
     #Web Application port
     port = CURRENT_SERVER_PORT
-    if port!=80:port1=":"+str(port)
-    else:port1=''
-    
+    port1 = ":"+str(port) if port!=80 else ''
     #replace WAF server with actual server in request
     try:
         second_line = request.split(b'\n')[1].split(b" ")[1][:-1]
         request=request.replace(second_line,(webserver+str(port1)).encode('utf-8'))
     except:
         trace("Could not replace server with actual server in request but, still trying to send!")
-    
+
     #Inject True-Client-IP in headers
     try:
         if len(request.split(b'\n'))>1:
@@ -280,11 +268,11 @@ def prthread(conn, client_addr):
         s.connect((webserver, port))
         # send request
         s.send(request)
-        
+
         while 1:
             # data from web application
             data = s.recv(MAX_RCV)
-            
+
             if (len(data) > 0):
                 # data revert back to client
                 conn.send(data)
@@ -299,22 +287,26 @@ def prthread(conn, client_addr):
         try:sys.exit(1)
         except SystemExit:sys.exit(1)
         except:pass
+
+def send_response(conn, msg):
+    conn.send(msg)
+    conn.close()
+    try:sys.exit(1)
+    except SystemExit:sys.exit(1)
+    except:pass
 # working thread END
 
 #function for rowfactory of sqlite fetch
 def dict_factory(cursor, row):
-    d = {}
-    for idx, col in enumerate(cursor.description):
-        d[col[0]] = row[idx]
-    return d
+    return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
 
 # thread : update rules from database
 def dbthread(arg):
     profid=arg
     force=True
-    if profid==None:
-            profid=1
-            force=False
+    if profid is None:
+        profid=1
+        force=False
     #creating connection to Sqlite3 Database
     try:
         conn = sqlite3.connect('waf.db')
@@ -330,8 +322,6 @@ def dbthread(arg):
                     profid=qres['profID']
             except:
                 traceback.print_exc()
-                pass
-
             #updating server host and port
             try:
                 c = conn.cursor()
@@ -344,9 +334,7 @@ def dbthread(arg):
                 CURRENT_SERVER_PORT=qres['port']
             except:
                 traceback.print_exc()
-                pass
-
-            if profid==None:
+            if profid is None:
                 profid=1
             try:
                 c = conn.cursor()
@@ -369,8 +357,7 @@ def dbthread(arg):
                     ALLOWED_CLIENTS=[]
                     c.execute("SELECT ip FROM ipclients WHERE status=1 AND profID="+str(profid))
                     qres=c.fetchall()
-                    qer=[]
-                    for  k in qres:qer.append(k['ip'])
+                    qer = [k['ip'] for k in qres]
                     ALLOWED_CLIENTS += qer
                     c.close()
                 else:
@@ -389,8 +376,7 @@ def dbthread(arg):
                     ALLOWED_COUNTRIES=[]
                     c.execute("SELECT countryCode FROM countryrule WHERE status=1 AND profID="+str(profid))
                     qres=c.fetchall()
-                    qer=[]
-                    for  k in qres:qer.append(k['countryCode'])
+                    qer = [k['countryCode'] for k in qres]
                     ALLOWED_COUNTRIES += qer
                     c.close()
                 else:
@@ -417,7 +403,7 @@ def dbthread(arg):
                     if INTELLIGENT_REQ_TEST:
                         trace('Changed INTELLIGENT_REQ_TEST Flag to False')
                     INTELLIGENT_REQ_TEST = False
-                
+
                 #set number of request to hold
                 global REQUEST_HOLD
                 REQUEST_HOLD = int(profile['requesthold'])
@@ -437,19 +423,17 @@ def dbthread(arg):
                 BLOCKED_CLIENTS=[]
                 c.execute("SELECT ip FROM ipclients WHERE status=0 AND profID="+str(profid))
                 qres=c.fetchall()
-                qer=[]
-                for  k in qres:qer.append(k['ip'])
+                qer = [k['ip'] for k in qres]
                 BLOCKED_CLIENTS += qer
                 c.close()
-                
+
                 #check blocked Countries
                 global BLOCKED_COUNTRY
                 c = conn.cursor()
                 BLOCKED_COUNTRY=[]
                 c.execute("SELECT countryCode FROM countryrule WHERE status=0 AND profID="+str(profid))
                 qres=c.fetchall()
-                qer=[]
-                for  k in qres:qer.append(k['countryCode'])
+                qer = [k['countryCode'] for k in qres]
                 BLOCKED_COUNTRY += qer
                 c.close()
             except:
@@ -465,7 +449,7 @@ def dbthread(arg):
 #Output info if DEBUG true and color code as per rule hitted
 def infoOut(rtyp,request,rfrom):
     if DEBUG:
-        if "Request" == rtyp:clr = 34
+        if rtyp == "Request":clr = 34
         elif "[BLOCKED]IP Blacklist" in rtyp:clr = 33
         elif "[BLOCKED]SQL Injection" in rtyp: clr=31
         elif "[BLOCKED]Intelligent System Marked Request as SQL Injection" in rtyp:clr=31

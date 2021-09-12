@@ -1,9 +1,11 @@
 .DS_Store
-SQL injection detection using ML.ipynb
+*-LocalOnly.ipynb
 sqli.csv
 benign_for_training.txt
 sqli_for_training.txt
-.vscode/settings.json
+.vscode
 iwaf/intelligent/wandb/
-iwaf/intelligent/Final-SQLI-Model.h5
-iwaf/intelligent/Final-SQLI-Vectorizer
+*.icloud
+*.ipynb_checkpoints*
+iwaf/intelligent/wandb/*
+env/*
