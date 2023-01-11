@@ -11,7 +11,7 @@ Intelligent Web Application Firewall
 > export FLASK_APP=wafDashboard
 
 > flask run
-(This starts dashboard for firewall profile and filter managenemt) Username:Password :: WAFAdmin:DemoWAFuser
+(This starts dashboard for firewall profile and filter management) Username:Password :: WAFAdmin:DemoWAFuser
 
 ### In another terminal/cmd in `iWaf` directory
 > cd iwaf

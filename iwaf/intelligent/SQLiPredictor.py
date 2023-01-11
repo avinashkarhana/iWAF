@@ -7,9 +7,10 @@ import cloudpickle
 import re
 
 class Intelligent:
-    mymodel = load_model('./intelligent/binary_crossentropy@adam-Final-SQLI-Model.h5')
-    myvectorizer = cloudpickle.load(open('./intelligent/New-Final-SQLI-Vectorizer', 'rb'))
-    myvectorizer = staticmethod(myvectorizer)
+    modelFolderPath = "./iwaf/intelligent/"
+    mymodel = load_model(modelFolderPath + 'binary_crossEntropy@adam-Final-SQLI-Model.h5')
+    myVectorizer = cloudpickle.load(open(modelFolderPath + 'New-Final-SQLI-Vectorizer', 'rb'))
+    myVectorizer = staticmethod(myVectorizer)
     def predict_sqli_attack(self,input_val=0,verbose=False):
         def clean_data(inp):
             inp = inp.replace('\n', '')
@@ -44,7 +45,7 @@ class Intelligent:
         clr_str = input_val
 
         # Vectorization with New Vectorizer
-        input_val = self.myvectorizer(inp=input_val)
+        input_val = self.myVectorizer(inp=input_val)
 
         result = self.mymodel.predict(input_val)
         out(beautify) 
