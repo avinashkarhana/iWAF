@@ -2,6 +2,7 @@
 import sys
 import socket
 import _thread as thread
+from xml.dom.expatbuilder import parseString
 import requests
 import json
 import sqlite3
@@ -15,7 +16,7 @@ Options:
     port=8080               [ Port to listen on (default 8080) ]
     host=localhost          [ Host to listen on (default all) ]
     debug=True              [ Debug mode to see all debug messages ]
-    profileid=1             [ Profile ID to use ]
+    profileId=1             [ Profile ID to use ]
     --help                  [ Show this help message ]
     --version               [ Show version ]    
 """
@@ -179,7 +180,8 @@ def filterThread(conn, client_addr):
                 except SystemExit:
                     sys.exit(1)
                 except:
-                    pass
+                    if DEBUG:
+                        traceback.print_exc()
 
         reqFirstLine = reqFirstLine.upper()
         for rule in CommonSQLInjectionRules:
@@ -194,7 +196,8 @@ def filterThread(conn, client_addr):
                 except SystemExit:
                     sys.exit(1)
                 except:
-                    pass
+                    if DEBUG:
+                        traceback.print_exc()
 
         reqFirstPart = reqFirstPart.replace(b'&frasl;', b'/')
         request = reqFirstPart + reqLastPart
@@ -204,50 +207,51 @@ def filterThread(conn, client_addr):
         trace("SQL Injection Check Failed !")
     #SQL Injection Check END
 
-    #Intelligent Request Testing START (PENDING)
+    #Intelligent Request Testing START
     try:
         if INTELLIGENT_REQ_TEST:
-            #check act
+            #check reqLastPart for POST type requests
             global intelligentPredictor
-            if len(str(reqLastPart))>3:
+            if len(str(reqLastPart)) > 3:
                 try:
-                    tu = str(reqLastPart).split(" ")[1].split("?")[1]
-                    intelligentPredResult = intelligentPredictor.predict_sqli_attack(input_val=tu)
-                    uui = True
+                    intelligentPredResult = intelligentPredictor.predictSqliAttack(input_val=reqLastPart)
+                    if intelligentPredResult > INTELLIGENT_THRESHOLD[INTELLIGENT_MODE.upper()]:
+                        conn.send(failAttemptMsg + b'i')
+                        conn.close()
+                        printInfoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection", reqFirstLine, client_addr)
+                        with open('intrusion.log','a+') as intrusionLogFile:
+                            intrusionLogFile.write("\nSQL Injection(INTELLIGENT)❡" + str(reqFirstLine) + "❡" + str(client_addr[0])+ ":" + str(client_addr[1]) + "❡" + str(reqFirstPart+reqLastPart))
+                        try:
+                            sys.exit(1)
+                        except SystemExit:
+                            sys.exit(1)
+                        except:
+                            if DEBUG:
+                                traceback.print_exc()
                 except:
-                    uui = False
-                if uui and intelligentPredResult > INTELLIGENT_THRESHOLD[INTELLIGENT_MODE.upper()]:
-                    conn.send(failAttemptMsg + b'i')
-                    conn.close()
-                    printInfoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection", reqFirstLine, client_addr)
-                    with open('intrusion.log','a+') as intrusionLogFile:
-                        intrusionLogFile.write("\nSQL Injection(INTELLIGENT)❡" + str(reqFirstLine) + "❡" + str(client_addr[0])+ ":" + str(client_addr[1]) + "❡" + str(reqFirstPart+reqLastPart))
-                    try:
-                        sys.exit(1)
-                    except SystemExit:
-                        sys.exit(1)
-                    except:
-                        pass
-            # check reqFirstLine
-            if len(str(reqFirstLine))>3:
+                    if DEBUG:
+                        traceback.print_exc()
+            # check reqFirstLine for GET type requests
+            if len(str(reqFirstLine)) > 3:
                 try:
-                    tu=str(reqFirstLine).split(" ")[1].split("?")[1]
-                    intelligentPredResult = intelligentPredictor.predict_sqli_attack(input_val=tu)
-                    uui = True
+                    tu = str(reqFirstLine).split(" ")[1].split("?")[1]
+                    intelligentPredResult = intelligentPredictor.predictSqliAttack(input_val=tu)
+                    if intelligentPredResult > INTELLIGENT_THRESHOLD[INTELLIGENT_MODE.upper()]:
+                        conn.send(failAttemptMsg + b'i')
+                        conn.close()
+                        printInfoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection", reqFirstLine, client_addr)
+                        with open('intrusion.log', 'a+') as intrusionLogFile:
+                            intrusionLogFile.write("\nSQL Injection(INTELLIGENT)❡" + str(reqFirstLine) + "❡" + str(client_addr[0])+ ":" + str(client_addr[1]) + "❡" + str(reqFirstPart+reqLastPart))
+                        try:
+                            sys.exit(1)
+                        except SystemExit:
+                            sys.exit(1)
+                        except:
+                            if DEBUG:
+                                traceback.print_exc()
                 except:
-                    uui=False
-                if uui and intelligentPredResult > INTELLIGENT_THRESHOLD[INTELLIGENT_MODE.upper()]:
-                    conn.send(failAttemptMsg + b'i')
-                    conn.close()
-                    printInfoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection", reqFirstLine, client_addr)
-                    with open('intrusion.log', 'a+') as intrusionLogFile:
-                        intrusionLogFile.write("\nSQL Injection(INTELLIGENT)❡" + str(reqFirstLine) + "❡" + str(client_addr[0])+ ":" + str(client_addr[1]) + "❡" + str(reqFirstPart+reqLastPart))
-                    try:
-                        sys.exit(1)
-                    except SystemExit:
-                        sys.exit(1)
-                    except:
-                        pass
+                    if DEBUG:
+                        traceback.print_exc()
     except SystemExit:
         sys.exit(1)
     except:
@@ -297,8 +301,8 @@ def filterThread(conn, client_addr):
 
     #WEB APPLICATION SOCKET
     try:
-        # web application connection Socket
-        webSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)  
+        # web application connection Socket that can handle https
+        webSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         webSocket.connect((webServer, int(CURRENT_SERVER_PORT)))
         # send request
         webSocket.send(request)
@@ -325,7 +329,8 @@ def filterThread(conn, client_addr):
         except SystemExit:
             sys.exit(1)
         except:
-            pass
+            if DEBUG:
+                traceback.print_exc()
 
 def send_response(conn, msg):
     conn.send(msg)
@@ -335,11 +340,12 @@ def send_response(conn, msg):
     except SystemExit:
         sys.exit(1)
     except:
-        pass
+        if DEBUG:
+            traceback.print_exc()
 # working thread END
 
 #function for rowFactory of sqlite fetch
-def dict_factory(cursor, row):
+def dictFactory(cursor, row):
     return {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
 
 # thread : update rules from database
@@ -352,13 +358,13 @@ def dbRuleUpdateThread(profileId=None):
     try:
         dbFileContainerPath = "./iwaf/"
         conn = sqlite3.connect(dbFileContainerPath + 'waf.db')
-        conn.row_factory = dict_factory
+        conn.row_factory = dictFactory
         while True:
             #updating profileID
             try:
                 if not force:
                     dbConnectionCursor = conn.cursor()
-                    dbConnectionCursor.execute("SELECT profID FROM CURPROF")
+                    dbConnectionCursor.execute("SELECT profID FROM CURRENT_PROFILE")
                     queryResponse = dbConnectionCursor.fetchone()
                     dbConnectionCursor.close()
                     profileId = queryResponse['profID']
@@ -367,7 +373,7 @@ def dbRuleUpdateThread(profileId=None):
             #updating server host and port
             try:
                 dbConnectionCursor = conn.cursor()
-                dbConnectionCursor.execute("SELECT host,port FROM CURSERV")
+                dbConnectionCursor.execute("SELECT host,port FROM CURRENT_SERVER")
                 queryResponse=dbConnectionCursor.fetchone()
                 dbConnectionCursor.close()
                 global CURRENT_SERVER_HOST
@@ -380,7 +386,7 @@ def dbRuleUpdateThread(profileId=None):
                 profileId=1
             try:
                 dbConnectionCursor = conn.cursor()
-                dbConnectionCursor.execute("SELECT * FROM wafrules WHERE profID=" + str(profileId))
+                dbConnectionCursor.execute("SELECT * FROM WAF_RULES WHERE profID=" + str(profileId))
                 queryResponse = dbConnectionCursor.fetchall()
                 dbConnectionCursor.close()
                 if len(queryResponse) < 1:
@@ -388,7 +394,7 @@ def dbRuleUpdateThread(profileId=None):
                 else:
                     profile = queryResponse[0]
                 #check for OnlyAllowedIP flag
-                if profile['onlyallowedip'] == 1:
+                if profile['OnlyAllowedIP'] == 1:
                     global OnlyAllowedIP
                     if OnlyAllowedIP == False:
                         trace('Changed OnlyAllowedIP Flag to True')
@@ -397,7 +403,7 @@ def dbRuleUpdateThread(profileId=None):
                     #update ALLOWED_CLIENTS list as per profile
                     dbConnectionCursor = conn.cursor()
                     ALLOWED_CLIENTS = []
-                    dbConnectionCursor.execute("SELECT ip FROM ipclients WHERE status=1 AND profID="+str(profileId))
+                    dbConnectionCursor.execute("SELECT ip FROM ipClients WHERE status=1 AND profID="+str(profileId))
                     queryResponse = dbConnectionCursor.fetchall()
                     queryRespIps = [k['ip'] for k in queryResponse]
                     ALLOWED_CLIENTS += queryRespIps
@@ -407,7 +413,7 @@ def dbRuleUpdateThread(profileId=None):
                         trace('Changed OnlyAllowedIP Flag to False')
                     OnlyAllowedIP = False
                 #check for OnlyAllowedCountry flag
-                if profile['onlyallowedcountries'] == 1:
+                if profile['onlyAllowedCountries'] == 1:
                     global OnlyAllowedCountries
                     if OnlyAllowedCountries == False:
                         trace('Changed OnlyAllowedCountries Flag to True')
@@ -416,7 +422,7 @@ def dbRuleUpdateThread(profileId=None):
                     #update ALLOWED_CLIENTS list as per profile
                     dbConnectionCursor = conn.cursor()
                     ALLOWED_COUNTRIES = []
-                    dbConnectionCursor.execute("SELECT countryCode FROM countryrule WHERE status=1 AND profID="+str(profileId))
+                    dbConnectionCursor.execute("SELECT countryCode FROM COUNTRY_RULE WHERE status=1 AND profID="+str(profileId))
                     queryResponse = dbConnectionCursor.fetchall()
                     queryRespIps = [k['countryCode'] for k in queryResponse]
                     ALLOWED_COUNTRIES += queryRespIps
@@ -426,7 +432,7 @@ def dbRuleUpdateThread(profileId=None):
                         trace('Changed OnlyAllowedCountries Flag to False')
                     OnlyAllowedCountries = False
                 #check for Proxy Block flag
-                if profile['proxyblock'] == 1:
+                if profile['proxyBlock'] == 1:
                     global PROXY_BLOCK
                     if PROXY_BLOCK == False:
                         trace('Changed ProxyBlock Flag to True')
@@ -436,7 +442,7 @@ def dbRuleUpdateThread(profileId=None):
                         trace('Changed ProxyBlock Flag to False')
                     PROXY_BLOCK = False
                 #check for intelligent test flag
-                if profile['intelligenttest'] == 1:
+                if profile['intelligentTest'] == 1:
                     global INTELLIGENT_REQ_TEST
                     if INTELLIGENT_REQ_TEST == False:
                         trace('Changed INTELLIGENT_REQ_TEST Flag to True')
@@ -448,22 +454,22 @@ def dbRuleUpdateThread(profileId=None):
 
                 #set number of request to hold
                 global REQUEST_HOLD
-                REQUEST_HOLD = int(profile['requesthold'])
+                REQUEST_HOLD = int(profile['requestHold'])
 
                 #set Intelligent Mode
                 global INTELLIGENT_MODE
-                if profile['intelligentmode'] != "NULL":
-                    INTELLIGENT_MODE = profile['intelligentmode']
+                if profile['intelligentMode'] != "NULL":
+                    INTELLIGENT_MODE = profile['intelligentMode']
 
                 #set max request size
                 global MAX_RCV
-                MAX_RCV = int(profile['maxrcv'])
+                MAX_RCV = int(profile['maxRcv'])
 
                 #check for BLOCKED CLIENTS
                 global BLOCKED_CLIENTS
                 dbConnectionCursor = conn.cursor()
                 BLOCKED_CLIENTS = []
-                dbConnectionCursor.execute("SELECT ip FROM ipclients WHERE status=0 AND profID="+str(profileId))
+                dbConnectionCursor.execute("SELECT ip FROM ipClients WHERE status=0 AND profID="+str(profileId))
                 queryResponse = dbConnectionCursor.fetchall()
                 queryRespIps = [k['ip'] for k in queryResponse]
                 BLOCKED_CLIENTS += queryRespIps
@@ -473,7 +479,7 @@ def dbRuleUpdateThread(profileId=None):
                 global BLOCKED_COUNTRY
                 dbConnectionCursor = conn.cursor()
                 BLOCKED_COUNTRY = []
-                dbConnectionCursor.execute("SELECT countryCode FROM countryrule WHERE status=0 AND profID="+str(profileId))
+                dbConnectionCursor.execute("SELECT countryCode FROM COUNTRY_RULE WHERE status=0 AND profID="+str(profileId))
                 queryResponse = dbConnectionCursor.fetchall()
                 queryRespIps = [k['countryCode'] for k in queryResponse]
                 BLOCKED_COUNTRY += queryRespIps
@@ -513,13 +519,13 @@ def main():
     profileID = None
     
     for arg in sys.argv:
-        if arg.split("=")[0].lower() == "debug":
+        if arg.split("=")[0].lower() == "debug" and arg.split("=")[1].lower() == "true":
             DEBUG = True
         if arg.split("=")[0].lower() == "port":
             FIREWALL_PORT = arg.split("=")[1]
         if arg.split("=")[0].lower() == "host":
             FIREWALL_HOST = arg.split("=")[1]
-        if arg.split("=")[0].lower() == "profileid":
+        if arg.split("=")[0].lower() == "profileId".lower():
             profileID = arg.split("=")[1]
         if "help" in arg.split("=")[0].lower():
             print(USAGE_STRING)
@@ -556,7 +562,8 @@ def main():
         except SystemExit:
             sys.exit(1)
         except:
-            pass
+            if DEBUG:
+                traceback.print_exc()
 
     # instantiate the intelligent system
     from intelligent.SQLiPredictor import Intelligent
@@ -566,13 +573,17 @@ def main():
     # connections from client
     while True:
         conn, client_addr = wafWebSocket.accept()
+        print("Connection from", client_addr)
         # request handling thread creation
         thread.start_new_thread(filterThread, (conn, client_addr))
     wafWebSocket.close()
     
 if __name__ == '__main__':
+    main()
     try:
       main()
     except KeyboardInterrupt:
       sys.exit(0)
-      pass
+    except:
+        if DEBUG:
+            traceback.print_exc()

@@ -5,17 +5,17 @@
   <h1 style="background: lightgray;text-align: center;">{% block title %}Profiles{% endblock %}</h1><hr>
   {% if g.user %}
     <div style="text-align: center;">
-        <form style="display: inline-block;" action="{{ url_for('dashboard.setcurserv') }}" method="POST">
-            <b>Current Server Host: </b> <input name='curservhost' value="{{ curserv['host'] }}" />
-            <b>Current Server PORT: </b> <input name='curservport' value="{{ curserv['port'] }}" /><br>
+        <form style="display: inline-block;" action="{{ url_for('dashboard.setCurrentServer') }}" method="POST">
+            <b>Current Server Host: </b> <input name='currentServerHost' value="{{ currentServer['host'] }}" />
+            <b>Current Server PORT: </b> <input name='currentServerPort' value="{{ currentServer['port'] }}" /><br>
             <input style="display: inline;color: antiquewhite!important;background-color:red!important;" class="modern socle" type="submit" value="Update" onclick="return confirm('Are you sure?');">
         </form>
     </div>
     <a class="metro three-d" href="{{ url_for('dashboard.create') }}">Create New Profile</a>
-    <form style="right: 0;float:right;display: inline;" action="{{ url_for('dashboard.setcurprof') }}" method="POST">
-        <b>Current Working Profile: </b> <select onchange="this.parentNode.submit()" class="simple-input sel wide" style="right: 0;float:right;display: inline;" name='curprof'>
+    <form style="right: 0;float:right;display: inline;" action="{{ url_for('dashboard.setCurrentProfile') }}" method="POST">
+        <b>Current Working Profile: </b> <select onchange="this.parentNode.submit()" class="simple-input sel wide" style="right: 0;float:right;display: inline;" name='currentProfile'>
             {% for profile in profiles %}
-            {% if profile['profID']|string == curprof|string %}
+            {% if profile['profID']|string == currentProfile|string %}
                 <option value={{ profile['profID'] }} selected>{{ profile['Title'] }}-{{ profile['profID'] }}</option>
             {% else %}
                 <option value={{ profile['profID'] }} >{{ profile['Title'] }}-{{ profile['profID'] }}</option>
@@ -47,8 +47,8 @@
                     <td><div class="demo-wrapper"><input class="simple-input" name="title" value="{{ request.form['title'] or profile['title'] }}" required></td>
                     <td><textarea style="margin-top: 2px!important;border: 4px solid #F1B720;height: 32px;border-radius: 5px;"  name="description" >{{ request.form['description'] or profile['description'] }}</textarea></td>
                     <td>
-                        <select disabled class="simple-input sel" style="min-width:170px!important;max-width: 170px;" name="onlyallowedip" type="text" value="{{ request.form['onlyallowedip'] or profile['onlyallowedip'] }}" required>
-                            {% if profile['onlyallowedip']==1 %}
+                        <select disabled class="simple-input sel" style="min-width:170px!important;max-width: 170px;" name="OnlyAllowedIP" type="text" value="{{ request.form['OnlyAllowedIP'] or profile['OnlyAllowedIP'] }}" required>
+                            {% if profile['OnlyAllowedIP']==1 %}
                             <option value="1" selected>On</option>
                             <option value="0">Off</option>
                             {% else %}
@@ -58,8 +58,8 @@
                         </select>
                     </td>
                     <td>
-                        <select disabled class="simple-input sel" style="min-width:170px!important;max-width: 170px;" name="onlyallowedcountries" type="text" value="{{ request.form['onlyallowedcountries'] or profile['onlyallowedcountries'] }}" required>
-                            {% if profile['onlyallowedcountries']==1 %}
+                        <select disabled class="simple-input sel" style="min-width:170px!important;max-width: 170px;" name="onlyAllowedCountries" type="text" value="{{ request.form['onlyAllowedCountries'] or profile['onlyAllowedCountries'] }}" required>
+                            {% if profile['onlyAllowedCountries']==1 %}
                             <option value="1" selected>On</option>
                             <option value="0">Off</option>
                             {% else %}
@@ -69,8 +69,8 @@
                         </select>
                     </td>
                     <td>
-                        <select disabled class="simple-input sel" style="min-width:116px!important;max-width: 210px;" name="proxyblock" type="text" value="{{ request.form['proxyblock'] or profile['proxyblock'] }}" required>
-                            {% if profile['proxyblock']==1 %}
+                        <select disabled class="simple-input sel" style="min-width:116px!important;max-width: 210px;" name="proxyBlock" type="text" value="{{ request.form['proxyBlock'] or profile['proxyBlock'] }}" required>
+                            {% if profile['proxyBlock']==1 %}
                             <option value="1" selected>On</option>
                             <option value="0">Off</option>
                             {% else %}
@@ -80,8 +80,8 @@
                         </select>
                     </td>
                     <td>
-                        <select disabled class="simple-input sel" style="min-width:90px!important;max-width: 210px;" name="intelligenttest" type="text" value="{{ request.form['intelligenttest'] or profile['intelligenttest'] }}" required>
-                            {% if profile['intelligenttest']==1 %}
+                        <select disabled class="simple-input sel" style="min-width:90px!important;max-width: 210px;" name="intelligentTest" type="text" value="{{ request.form['intelligentTest'] or profile['intelligentTest'] }}" required>
+                            {% if profile['intelligentTest']==1 %}
                             <option value="1" selected>On</option>
                             <option value="0">Off</option>
                             {% else %}
@@ -91,12 +91,12 @@
                         </select>
                     </td>
                     <td>
-                        <select disabled class="simple-input sel" style="min-width:120px!important;max-width: 120px;" name="intelligentmode" type="text" value="{{ request.form['intelligentmode'] or profile['intelligentmode'] }}" required>
-                            {% if profile['intelligentmode']=='NORMAL' %}
+                        <select disabled class="simple-input sel" style="min-width:120px!important;max-width: 120px;" name="intelligentMode" type="text" value="{{ request.form['intelligentMode'] or profile['intelligentMode'] }}" required>
+                            {% if profile['intelligentMode']=='NORMAL' %}
                             <option value="NORMAL" selected>Normal</option>
                             <option value="HARD">Hard</option>
                             <option value="UNDER-ATTACK">Under-Attack(May cause increase in number of FalsePositives!)</option>
-                            {% elif profile['intelligentmode']=='HARD' %}
+                            {% elif profile['intelligentMode']=='HARD' %}
                             <option value="NORMAL">Normal</option>
                             <option value="HARD" selected>Hard</option>
                             <option value="UNDER-ATTACK">Under-Attack(May cause increase in number of FalsePositives!)</option>
@@ -107,8 +107,8 @@
                             {% endif %}
                         </select>
                     </td>
-                    <td><div class="demo-wrapper"><input class="simple-input" style="margin-top: 3px!important;" name="requesthold" value="{{ request.form['requesthold'] or profile['requesthold'] }}" required></div></td>
-                    <td><div class="demo-wrapper"><input class="simple-input" style="margin-top: 3px!important;" name="maxrcv" value="{{ request.form['maxrcv'] or profile['maxrcv'] }}" required></div></td>
+                    <td><div class="demo-wrapper"><input class="simple-input" style="margin-top: 3px!important;" name="requestHold" value="{{ request.form['requestHold'] or profile['requestHold'] }}" required></div></td>
+                    <td><div class="demo-wrapper"><input class="simple-input" style="margin-top: 3px!important;" name="maxRcv" value="{{ request.form['maxRcv'] or profile['maxRcv'] }}" required></div></td>
                 </tr>
                 <tr>
                     <td colspan="8">

@@ -3,16 +3,18 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 import tensorflow.keras as keras
 from tensorflow.keras.models import load_model
 import pandas as pd
-import cloudpickle
 import re
+from .SQLiVectorizer import SQLiVectorizer
 
 class Intelligent:
     modelFolderPath = "./iwaf/intelligent/"
     mymodel = load_model(modelFolderPath + 'binary_crossEntropy@adam-Final-SQLI-Model.h5')
-    myVectorizer = cloudpickle.load(open(modelFolderPath + 'New-Final-SQLI-Vectorizer', 'rb'))
-    myVectorizer = staticmethod(myVectorizer)
-    def predict_sqli_attack(self,input_val=0,verbose=False):
+    vectorizer = SQLiVectorizer()
+    vectorize =  vectorizer.Vectorize
+    
+    def predictSqliAttack(self,input_val=0,verbose=False):
         def clean_data(inp):
+            inp = str(inp)
             inp = inp.replace('\n', '')
             inp = inp.replace('%20', ' ')
             inp = inp.replace('/', ' ')
@@ -31,7 +33,7 @@ class Intelligent:
         beautify = ''
         for i in range(20):
             beautify += "="
-        zip=False
+        zip = False
         if input_val == 0:
             zip = True
             out(beautify+"\nEnter 0 anytime to exit!\n"+beautify) 
@@ -44,9 +46,10 @@ class Intelligent:
         input_val = clean_data(input_val)
         clr_str = input_val
 
-        # Vectorization with New Vectorizer
-        input_val = self.myVectorizer(inp=input_val)
-
+        # Vectorization
+        input_val = self.vectorize(input_val)
+        # drop the first column of the vectorized data df
+        input_val = input_val.drop(input_val.columns[0], axis=1)
         result = self.mymodel.predict(input_val)
         out(beautify) 
 
@@ -56,7 +59,8 @@ class Intelligent:
             elif result <= 0.5:
                 print(result,"It seems to be safe") 
             out(beautify)
-            self.predict_sqli_attack()
+            self.predictSqliAttack()
         else:
             #if result>0.5:print(clr_str)
             return(result)
+    

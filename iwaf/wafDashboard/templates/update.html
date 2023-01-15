@@ -262,8 +262,8 @@
             <textarea style="margin-top: 2px!important;height:60px!important;width:397px;border: 4px solid #F1B720;height: 32px;border-radius: 5px;"  name="description" >{{ request.form['description'] or profile['description'] }}</textarea><br>
             
             <br><label>Allow Only Specific Ip Mode</label>
-            <select onchange="setcolor(this)" class="simple-input sel swide" name="onlyallowedip" type="text" value="{{ request.form['onlyallowedip'] or profile['onlyallowedip'] }}" required>
-                {% if profile['onlyallowedip']|string =='1' %}
+            <select onchange="setcolor(this)" class="simple-input sel swide" name="OnlyAllowedIP" type="text" value="{{ request.form['OnlyAllowedIP'] or profile['OnlyAllowedIP'] }}" required>
+                {% if profile['OnlyAllowedIP']|string =='1' %}
                 <option value="1" selected>On</option>
                 <option value="0">Off</option>
                 {% else %}
@@ -273,8 +273,8 @@
             </select>
         
             <br><label>Allow Only in Specific Country Mode</label>
-            <select onchange="setcolor(this)" class="simple-input sel swide" name="onlyallowedcountries" type="text" value="{{ request.form['onlyallowedcountries'] or profile['onlyallowedcountries'] }}" required>
-                {% if profile['onlyallowedcountries']|string=='1' %}
+            <select onchange="setcolor(this)" class="simple-input sel swide" name="onlyAllowedCountries" type="text" value="{{ request.form['onlyAllowedCountries'] or profile['onlyAllowedCountries'] }}" required>
+                {% if profile['onlyAllowedCountries']|string=='1' %}
                 <option value="1" selected>On</option>
                 <option value="0">Off</option>
                 {% else %}
@@ -284,8 +284,8 @@
             </select>
         
             <br><label>Proxy/VPN Blocking Mode</label>
-            <select onchange="setcolor(this)" class="simple-input sel swide" name="proxyblock" type="text" value="{{ request.form['proxyblock'] or profile['proxyblock'] }}" required>
-                {% if profile['proxyblock']|string=='1' %}
+            <select onchange="setcolor(this)" class="simple-input sel swide" name="proxyBlock" type="text" value="{{ request.form['proxyBlock'] or profile['proxyBlock'] }}" required>
+                {% if profile['proxyBlock']|string=='1' %}
                 <option value="1" selected>On</option>
                 <option value="0">Off</option>
                 {% else %}
@@ -295,8 +295,8 @@
             </select>
         
             <br><label>Intelligent Testing Mode</label>
-            <select onchange="setcolor(this)" class="simple-input sel swide" name="intelligenttest" type="text" value="{{ request.form['intelligenttest'] or profile['intelligenttest'] }}" required>
-                {% if profile['intelligenttest']|string=='1' %}
+            <select onchange="setcolor(this)" class="simple-input sel swide" name="intelligentTest" type="text" value="{{ request.form['intelligentTest'] or profile['intelligentTest'] }}" required>
+                {% if profile['intelligentTest']|string=='1' %}
                 <option value="1" selected>On</option>
                 <option value="0">Off</option>
                 {% else %}
@@ -306,12 +306,12 @@
             </select>
         
             <br><label>Intelligent Mode</label>
-            <select onchange="setcolor(this)" class="simple-input sel swide" name="intelligentmode" type="text" value="{{ request.form['intelligentmode'] or profile['intelligentmode'] }}" required>
-                {% if profile['intelligentmode']|string=='NORMAL' %}
+            <select onchange="setcolor(this)" class="simple-input sel swide" name="intelligentMode" type="text" value="{{ request.form['intelligentMode'] or profile['intelligentMode'] }}" required>
+                {% if profile['intelligentMode']|string=='NORMAL' %}
                 <option value="NORMAL" selected>Normal</option>
                 <option value="HARD">Hard</option>
                 <option value="UNDER-ATTACK">Under-Attack(May cause increase in number of FalsePositives!)</option>
-                {% elif profile['intelligentmode']|string=='HARD' %}
+                {% elif profile['intelligentMode']|string=='HARD' %}
                 <option value="NORMAL">Normal</option>
                 <option value="HARD" selected>Hard</option>
                 <option value="UNDER-ATTACK">Under-Attack(May cause increase in number of FalsePositives!)</option>
@@ -322,23 +322,23 @@
                 {% endif %}
             </select>
             <br><label>Max. number of request to hold at a time</label>
-            <input class="simple-input iwide" style="margin-top: 3px!important;" name="requesthold" value="{{ request.form['requesthold'] or profile['requesthold'] }}" required>
+            <input class="simple-input iwide" style="margin-top: 3px!important;" name="requestHold" value="{{ request.form['requestHold'] or profile['requestHold'] }}" required>
             <br><label>Max. size of request(bytes)</label>
-            <input class="simple-input iwide" style="margin-top: 3px!important;" name="maxrcv" value="{{ request.form['maxrcv'] or profile['maxrcv'] }}" required>
+            <input class="simple-input iwide" style="margin-top: 3px!important;" name="maxRcv" value="{{ request.form['maxRcv'] or profile['maxRcv'] }}" required>
             <br>
             <table id="profile*{{ profile['profID'] }}-IPtable">
                 <tr><td colspan="8" style="text-align: center;"><h2>IP Based rules</h2></td></tr>
                 <tr><td></td><td>IP</td><td>Status</td></tr>
-                {% for ipclient in ipclients %}
-                    <tr id="ipclientUpdate*{{ ipclient['id'] }}-tr"><td style="max-width: 20px;">➤</td>
+                {% for ipClient in ipClients %}
+                    <tr id="ipClientUpdate*{{ ipClient['id'] }}-tr"><td style="max-width: 20px;">➤</td>
                         <td>
-                            <input type='hidden' id="ipclientUpdate*{{ ipclient['id'] }}-id" value="{{ ipclient['id'] }}"" >
-                            <input class="simple-input" type='text' id="ipclientUpdate*{{ ipclient['id'] }}-ip" value="{{ ipclient['ip'] }}"" >
+                            <input type='hidden' id="ipClientUpdate*{{ ipClient['id'] }}-id" value="{{ ipClient['id'] }}"" >
+                            <input class="simple-input" type='text' id="ipClientUpdate*{{ ipClient['id'] }}-ip" value="{{ ipClient['ip'] }}"" >
                             
                         </td>
                         <td>
-                            <select onchange="setcolor(this)" class="simple-input sel swide" id="ipclientUpdate*{{ ipclient['id'] }}-status" >
-                                {% if ipclient['status']|string=='1' %}
+                            <select onchange="setcolor(this)" class="simple-input sel swide" id="ipClientUpdate*{{ ipClient['id'] }}-status" >
+                                {% if ipClient['status']|string=='1' %}
                                 <option value="1" selected>Allow</option>
                                 <option value="0">Block</option>
                                 {% else %}
@@ -348,7 +348,7 @@
                             </select>
                         </td>
                         <td>
-                            <span onclick="delipclient('ipclientUpdate*{{ ipclient['id'] }}','profile{{ profile['profID'] }}')" style="padding-top: 8px;cursor: pointer;height: 12px;width: 12px!important;border-radius: 50%;background-color: red;padding-left: 12px;padding-right: 11px;padding-bottom: 6px;">X</span>
+                            <span onclick="delipclient('ipClientUpdate*{{ ipClient['id'] }}','profile{{ profile['profID'] }}')" style="padding-top: 8px;cursor: pointer;height: 12px;width: 12px!important;border-radius: 50%;background-color: red;padding-left: 12px;padding-right: 11px;padding-bottom: 6px;">X</span>
                         </td>
                     </tr>
                 {% endfor %} 
@@ -357,11 +357,11 @@
             <table id="profile*{{ profile['profID'] }}-Countrytable">
                 <tr><td colspan="8" style="text-align: center;"><h2>Country Based rules</h2></td></tr>
                 <tr><td></td><td>Country</td><td>Status</td></tr>
-                {% for countryrule in countryrules %}
-                    <tr id="countryruleUpdate*{{ countryrule['id'] }}-tr" ><td style="max-width: 20px;">➤</td>
+                {% for COUNTRY_RULE in countryRules %}
+                    <tr id="countryRuleUpdate*{{ COUNTRY_RULE['id'] }}-tr" ><td style="max-width: 20px;">➤</td>
                         <td style="border-bottom: 5px solid rgba(65, 61, 61, 0.715);">
-                            <input type='hidden' id="countryruleUpdate*{{ countryrule['id'] }}-id" value="{{ countryrule['id'] }}"" >
-                            <select id="countryruleUpdate*{{ countryrule['id'] }}-country" class="simple-input sel wide" style="background-color: rgba(247, 247, 247, 0.537);">
+                            <input type='hidden' id="countryRuleUpdate*{{ COUNTRY_RULE['id'] }}-id" value="{{ COUNTRY_RULE['id'] }}"" >
+                            <select id="countryRuleUpdate*{{ COUNTRY_RULE['id'] }}-country" class="simple-input sel wide" style="background-color: rgba(247, 247, 247, 0.537);">
                                 <option value="AFGHANISTAN-AF">AFGHANISTAN-AF</option>
                                 <option value="ALBANIA-AL">ALBANIA-AL</option>
                                 <option value="ALGERIA-DZ">ALGERIA-DZ</option>
@@ -603,9 +603,9 @@
                             </select>
                             <span id="avinash">
                                 <script>
-                                    var country="{{ countryrule['country'] }}-{{ countryrule['countryCode'] }}";
+                                    var country="{{ COUNTRY_RULE['country'] }}-{{ COUNTRY_RULE['countryCode'] }}";
                                     country=country.toUpperCase();
-                                    var x=document.getElementById("countryruleUpdate*{{ countryrule['id'] }}-country").options;
+                                    var x=document.getElementById("countryRuleUpdate*{{ COUNTRY_RULE['id'] }}-country").options;
                                     for(var i=0;i<x.length;i++){
                                         if(x[i].value==country)
                                             {
@@ -618,8 +618,8 @@
                             </span>
                         </td>
                         <td style="border-bottom: 5px solid rgba(65, 61, 61, 0.715);">
-                            <select onchange="setcolor(this)" class="simple-input sel swide" id="countryruleUpdate*{{ countryrule['id'] }}-status" >
-                                {% if countryrule['status']|string=='1' %}
+                            <select onchange="setcolor(this)" class="simple-input sel swide" id="countryRuleUpdate*{{ COUNTRY_RULE['id'] }}-status" >
+                                {% if COUNTRY_RULE['status']|string=='1' %}
                                 <option value="1" selected>Allow</option>
                                 <option value="0">Block</option>
                                 {% else %}
@@ -629,7 +629,7 @@
                             </select>
                         </td>
                         <td>
-                            <span onclick="delcountryrule('countryruleUpdate*{{ countryrule['id'] }}','profile{{ profile['profID'] }}')" style="padding-top: 8px;cursor: pointer;height: 12px;width: 12px!important;border-radius: 50%;background-color: red;padding-left: 12px;padding-right: 11px;padding-bottom: 6px;">X</span>
+                            <span onclick="delcountryrule('countryRuleUpdate*{{ COUNTRY_RULE['id'] }}','profile{{ profile['profID'] }}')" style="padding-top: 8px;cursor: pointer;height: 12px;width: 12px!important;border-radius: 50%;background-color: red;padding-left: 12px;padding-right: 11px;padding-bottom: 6px;">X</span>
                         </td>
                     </tr>
                 {% endfor %} 
@@ -656,11 +656,11 @@
         }
 
         function frmsub(idd){
-            //ipclient update and add//
+            //ipClient update and add//
             ipcl('Update',idd);
             ipcl('Add',idd);
 
-            //countryrule update and add//
+            //COUNTRY_RULE update and add//
             cntr('Update',idd);
             cntr('Add',idd);
 
@@ -682,34 +682,34 @@
 
         function ipcl(role,idd,w=true,role1="",pp=""){
             if(pp!=""){
-                var ipclientstags=document.querySelectorAll("[id^='ipclient"+role+"*"+pp+"']");
+                var ipclientstags=document.querySelectorAll("[id^='ipClient"+role+"*"+pp+"']");
             }
             else{
-                var ipclientstags=document.querySelectorAll("[id^='ipclient"+role+"']");
+                var ipclientstags=document.querySelectorAll("[id^='ipClient"+role+"']");
             }
-            var ipclients=new Map();
+            var ipClients=new Map();
             console.log(ipclientstags);
             for(var i=0;i<ipclientstags.length;i++){
-                if(ipclients.has(ipclientstags[i].id.split("-")[0])){
-                    if(ipclients.get(ipclientstags[i].id.split("-")[0]).has(ipclientstags[i].id.split("-")[1])){
-                        ipclients.get(ipclientstags[i].id.split("-")[0]).set(ipclientstags[i].id.split("-")[1],ipclientstags[i].value);
+                if(ipClients.has(ipclientstags[i].id.split("-")[0])){
+                    if(ipClients.get(ipclientstags[i].id.split("-")[0]).has(ipclientstags[i].id.split("-")[1])){
+                        ipClients.get(ipclientstags[i].id.split("-")[0]).set(ipclientstags[i].id.split("-")[1],ipclientstags[i].value);
                     }
                     else{
-                        ipclients.get(ipclientstags[i].id.split("-")[0]).set(ipclientstags[i].id.split("-")[1],ipclientstags[i].value);
+                        ipClients.get(ipclientstags[i].id.split("-")[0]).set(ipclientstags[i].id.split("-")[1],ipclientstags[i].value);
                     }
                 }
                 else{
-                    ipclients.set(ipclientstags[i].id.split("-")[0],new Map());
-                    ipclients.get(ipclientstags[i].id.split("-")[0]).set(ipclientstags[i].id.split("-")[1],ipclientstags[i].value);
+                    ipClients.set(ipclientstags[i].id.split("-")[0],new Map());
+                    ipClients.get(ipclientstags[i].id.split("-")[0]).set(ipclientstags[i].id.split("-")[1],ipclientstags[i].value);
                 }
             }
-            ipclients=mapToObj(ipclients);
-            console.log(ipclients);
-            var ipclientsJSON=JSON.stringify(ipclients);
+            ipClients=mapToObj(ipClients);
+            console.log(ipClients);
+            var ipclientsJSON=JSON.stringify(ipClients);
             var ww = document.createElement('input');
             ww.type='hidden';
-            if(w){ww.name='ipclient'+role;}
-            else{ww.name='ipclient'+role1;}
+            if(w){ww.name='ipClient'+role;}
+            else{ww.name='ipClient'+role1;}
             ww.value+=ipclientsJSON;
             var rt=document.getElementsByName(ww.name);
             if(rt.length<1){
@@ -729,11 +729,11 @@
             var td3 = document.createElement('td');
             var td4 = document.createElement('td');
             var ip = document.createElement('input');
-            ip.id="ipclientAdd"+profID+"-ip";
+            ip.id="ipClientAdd"+profID+"-ip";
             ip.setAttribute('class', 'simple-input');
             ip.required=true;
             var sel = document.createElement('select');
-            sel.id="ipclientAdd"+profID+"-status";
+            sel.id="ipClientAdd"+profID+"-status";
             sel.setAttribute('class','simple-input sel swide');
             sel.required=true;
             sel.style.backgroundColor="rgba(213, 16, 16, 0.311)";
@@ -774,7 +774,7 @@
             var td3 = document.createElement('td');
             var td4 = document.createElement('td');
             var ip = document.createElement('select');
-            ip.id="countryruleAdd"+profID+"-country";
+            ip.id="countryRuleAdd"+profID+"-country";
             ip.setAttribute('class', 'simple-input sel wide');
             ip.required=true;
             var opl=countryoptions.length;
@@ -783,7 +783,7 @@
                 ip.appendChild(node);
             }
             var sel = document.createElement('select');
-            sel.id="countryruleAdd"+profID+"-status";
+            sel.id="countryRuleAdd"+profID+"-status";
             sel.setAttribute('class','simple-input sel swide');
             sel.required=true;
             sel.style.backgroundColor="rgba(213, 16, 16, 0.311)";
@@ -818,34 +818,34 @@
 
         function cntr(role,idd,w=true,role1="",pp=""){
             if(pp!=""){
-                var countryruletags=document.querySelectorAll("[id^='countryrule"+role+"*"+pp+"']");
+                var countryruletags=document.querySelectorAll("[id^='COUNTRY_RULE"+role+"*"+pp+"']");
             }
             else{
-                var countryruletags=document.querySelectorAll("[id^='countryrule"+role+"']");
+                var countryruletags=document.querySelectorAll("[id^='COUNTRY_RULE"+role+"']");
             }
-            var countryrules=new Map();
+            var countryRules=new Map();
             console.log(countryruletags);
             for(var i=0;i<countryruletags.length;i++){
-                if(countryrules.has(countryruletags[i].id.split("-")[0])){
-                    if(countryrules.get(countryruletags[i].id.split("-")[0]).has(countryruletags[i].id.split("-")[1])){
-                        countryrules.get(countryruletags[i].id.split("-")[0]).set(countryruletags[i].id.split("-")[1],countryruletags[i].value);
+                if(countryRules.has(countryruletags[i].id.split("-")[0])){
+                    if(countryRules.get(countryruletags[i].id.split("-")[0]).has(countryruletags[i].id.split("-")[1])){
+                        countryRules.get(countryruletags[i].id.split("-")[0]).set(countryruletags[i].id.split("-")[1],countryruletags[i].value);
                     }
                     else{
-                        countryrules.get(countryruletags[i].id.split("-")[0]).set(countryruletags[i].id.split("-")[1],countryruletags[i].value);
+                        countryRules.get(countryruletags[i].id.split("-")[0]).set(countryruletags[i].id.split("-")[1],countryruletags[i].value);
                     }
                 }
                 else{
-                    countryrules.set(countryruletags[i].id.split("-")[0],new Map());
-                    countryrules.get(countryruletags[i].id.split("-")[0]).set(countryruletags[i].id.split("-")[1],countryruletags[i].value);
+                    countryRules.set(countryruletags[i].id.split("-")[0],new Map());
+                    countryRules.get(countryruletags[i].id.split("-")[0]).set(countryruletags[i].id.split("-")[1],countryruletags[i].value);
                 }
             }
-            countryrules=mapToObj(countryrules);
-            console.log(countryrules);
-            var countryrulesJSON=JSON.stringify(countryrules);
+            countryRules=mapToObj(countryRules);
+            console.log(countryRules);
+            var countryrulesJSON=JSON.stringify(countryRules);
             var ww = document.createElement('input');
             ww.type='hidden';
-            if(w){ww.name='countryrule'+role;}
-            else{ww.name='countryrule'+role1;}
+            if(w){ww.name='COUNTRY_RULE'+role;}
+            else{ww.name='COUNTRY_RULE'+role1;}
             ww.value+=countryrulesJSON;
             var rt=document.getElementsByName(ww.name);
             if(rt.length<1){

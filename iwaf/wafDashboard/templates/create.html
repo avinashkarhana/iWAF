@@ -12,39 +12,39 @@
         <textarea style="margin-top: 2px!important;height:60px!important;width:397px;border: 4px solid #F1B720;height: 32px;border-radius: 5px;"  name="description" ></textarea><br>
         
         <br><label>Allow Only Specific Ip Mode</label>
-        <select class="simple-input sel swide" name="onlyallowedip" type="text" required>
+        <select class="simple-input sel swide" name="OnlyAllowedIP" type="text" required>
             <option value="1" >On</option>
             <option value="0">Off</option>
         </select>
 
         <br><label>Allow Only in Specific Country Mode</label>
-        <select class="simple-input sel swide" name="onlyallowedcountries" type="text" required>
+        <select class="simple-input sel swide" name="onlyAllowedCountries" type="text" required>
             <option value="1" >On</option>
             <option value="0">Off</option>
         </select>
 
         <br><label>Proxy/VPN Blocking Mode</label>
-        <select class="simple-input sel swide" name="proxyblock" type="text" required>
+        <select class="simple-input sel swide" name="proxyBlock" type="text" required>
             <option value="1">On</option>
             <option value="0">Off</option>
         </select>
 
         <br><label>Intelligent Testing Mode</label>
-        <select class="simple-input sel swide" name="intelligenttest" type="text" required>
+        <select class="simple-input sel swide" name="intelligentTest" type="text" required>
             <option value="1">On</option>
             <option value="0">Off</option>
         </select>
 
         <br><label>Intelligent Mode</label>
-        <select class="simple-input sel swide" name="intelligentmode" type="text" required>
+        <select class="simple-input sel swide" name="intelligentMode" type="text" required>
             <option value="NORMAL">Normal</option>
             <option value="HARD">Hard</option>
             <option value="UNDER-ATTACK">Under-Attack(May cause increase in number of FalsePositives!)</option>
         </select>
         <br><label>Max. number of request to hold at a time</label>
-        <input class="simple-input iwide" style="margin-top: 3px!important;" name="requesthold" placeholder=50 type='number' max=100 required>
+        <input class="simple-input iwide" style="margin-top: 3px!important;" name="requestHold" placeholder=50 type='number' max=100 required>
         <br><label>Max. size of request(bytes)</label>
-        <input class="simple-input iwide" style="margin-top: 3px!important;" name="maxrcv" placeholder=999999 min=10 type='number' required>
+        <input class="simple-input iwide" style="margin-top: 3px!important;" name="maxRcv" placeholder=999999 min=10 type='number' required>
         <br>
             <input class="modern socle" type="submit" onclick="return confirm('Are you sure or You want to make changes?\n(For In depth updation like IP based or country based rules you have to Select `Update Indepth` from home page after saving this.)');" value="Save">     
     </form>

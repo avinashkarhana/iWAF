@@ -14,26 +14,25 @@ import traceback
 
 bp = Blueprint("dashboard", __name__)
 
-def get_curserv():
-    curserv=get_db().execute("SELECT host,port FROM CURSERV").fetchone()
-    return curserv
+def getCurrentServer():
+    currentServer = get_db().execute("SELECT host,port FROM CURRENT_SERVER").fetchone()
+    return currentServer
 
 @bp.route('/')
 @login_required
 def index():
     db = get_db()
     profiles = db.execute(
-        'SELECT * from wafrules'
+        'SELECT * from WAF_RULES'
     ).fetchall()
+    return render_template('index.html', currentServer = getCurrentServer(), currentProfile = getCurrentProfile() ,profiles = profiles)
 
-    return render_template('index.html', curserv=get_curserv(), curprof=get_curprof() ,profiles=profiles)
 
-
-def get_profile(id):
+def getProfile(id):
     profile = (
         get_db()
         .execute(
-            "SELECT * FROM wafrules where profID = ?",
+            "SELECT * FROM WAF_RULES where profID = ?",
             (id,),
         )
         .fetchone()
@@ -41,242 +40,295 @@ def get_profile(id):
 
     if profile is None:
         abort(404, f"Profile id {id} doesn't exist.")
-
     return profile
 
-def get_ipclients(id):
-    ipclients = (
+def getIpClients(id):
+    ipClients = (
         get_db()
         .execute(
-            "SELECT * FROM ipclients where profID = ?",
+            "SELECT * FROM ipClients where profID = ?",
             (id,),
         )
         .fetchall()
     )
-    if ipclients is None:
-        ipclients=[]
+    if ipClients is None:
+        ipClients = []
+    return ipClients
 
-    return ipclients
-
-def get_countryrule(id):
+def getCountryRule(id):
     country = (
         get_db()
         .execute(
-            "SELECT * FROM countryrule where profID = ?",
+            "SELECT * FROM COUNTRY_RULE where profID = ?",
             (id,),
         )
         .fetchall()
     )
     if country is None:
-        country=[]
+        country = []
 
     return country
 
-def get_curprof():
-    curprof=get_db().execute("SELECT profID FROM CURPROF").fetchone()
-    return curprof['profID']
+def getCurrentProfile():
+    currentProfile = get_db().execute("SELECT profID FROM CURRENT_PROFILE").fetchone()
+    return currentProfile['profID']
 
-@bp.route("/create", methods=("GET", "POST"))
+@bp.route("/create", methods =("GET", "POST"))
 @login_required
 def create():
     if request.method == "POST":
-        error=None
-        try:title = request.form["title"]
-        except:error="Title is required!"
+        error = None
+        try:
+            title = request.form["title"]
+        except:
+            error = "Title is required!"
 
-        try:description = request.form["description"]
-        except:description=None 
+        try:
+            description = request.form["description"]
+        except:
+            description = None 
 
-        try:onlyallowedip = request.form["onlyallowedip"]
-        except:onlyallowedip = None
+        try:
+            onlyAllowedIp = request.form["OnlyAllowedIP"]
+        except:
+            onlyAllowedIp = None
 
-        try:onlyallowedcountries = request.form["onlyallowedcountries"]
-        except:onlyallowedcountries = None
+        try:
+            onlyAllowedCountries = request.form["onlyAllowedCountries"]
+        except:
+            onlyAllowedCountries = None
 
-        try:proxyblock = request.form["proxyblock"]
-        except:proxyblock = None
+        try:
+            proxyBlock = request.form["proxyBlock"]
+        except:
+            proxyBlock = None
 
-        try:intelligenttest = request.form["intelligenttest"]
-        except:intelligenttest = None
+        try:
+            intelligentTest = request.form["intelligentTest"]
+        except:
+            intelligentTest = None
 
-        try:maxrcv = request.form["maxrcv"]
-        except:maxrcv = None
+        try:
+            maxRcv = request.form["maxRcv"]
+        except:
+            maxRcv = None
 
-        try:requesthold = request.form["requesthold"]
-        except:requesthold = None
+        try:
+            requestHold = request.form["requestHold"]
+        except:
+            requestHold = None
 
-        try:intelligentmode = request.form["intelligentmode"]
-        except:intelligentmode = None
+        try:
+            intelligentMode = request.form["intelligentMode"]
+        except:
+            intelligentMode = None
 
         db = get_db()
-        parms=""
-        l=tuple()
-        if description!=None:
-            l+=(description,)
-            parms+=" description,"
+        parameters = ""
+        parameterValues = tuple()
+        if description != None:
+            parameterValues += (description,)
+            parameters += " description,"
 
-        if title!=None:
-            l+=(title,)
-            parms+=" title,"
+        if title!= None:
+            parameterValues += (title,)
+            parameters += " title,"
         
-        if onlyallowedip!=None:
-            l+=(onlyallowedip,)
-            parms+=" onlyallowedip,"
+        if onlyAllowedIp != None:
+            parameterValues += (onlyAllowedIp,)
+            parameters += " OnlyAllowedIP,"
 
-        if onlyallowedcountries!=None:
-            l+=(onlyallowedcountries,)
-            parms+=" onlyallowedcountries,"
+        if onlyAllowedCountries != None:
+            parameterValues += (onlyAllowedCountries,)
+            parameters += " onlyAllowedCountries,"
 
-        if proxyblock!=None:
-            l+=(proxyblock,)
-            parms+=" proxyblock,"
+        if proxyBlock != None:
+            parameterValues += (proxyBlock,)
+            parameters += " proxyBlock,"
 
-        if intelligenttest!=None:
-            l+=(intelligenttest,)
-            parms+=" intelligenttest,"
+        if intelligentTest != None:
+            parameterValues += (intelligentTest,)
+            parameters += " intelligentTest,"
 
-        if maxrcv!=None:
-            l+=(maxrcv,)
-            parms+=" maxrcv,"
+        if maxRcv != None:
+            parameterValues += (maxRcv,)
+            parameters += " maxRcv,"
 
-        if requesthold!=None:
-            l+=(requesthold,)
-            parms+=" requesthold,"
+        if requestHold != None:
+            parameterValues += (requestHold,)
+            parameters += " requestHold,"
 
-        if intelligentmode!=None:
-            l+=(intelligentmode,)
-            parms+=" intelligentmode"
-        ques=""
-        for i in range(0,len(l)):
-            if i!=len(l)-1:ques+=" '"+l[i]+"',"
-            else:ques+=" '"+l[i]+"'"
+        if intelligentMode != None:
+            parameterValues += (intelligentMode,)
+            parameters += " intelligentMode"
+        ques = ""
+        for i in range(0,len(parameterValues)):
+            if i != len(parameterValues) - 1:
+                ques += " '" + parameterValues[i] + "',"
+            else:
+                ques += " '" + parameterValues[i] + "'"
         
         if error is not None:
             flash(error)
         else:
             db = get_db()
-            q="INSERT INTO wafrules ("+parms+") VALUES ("+ques+")"
-            print(q)
-            db.execute(q)
+            qr = "INSERT INTO WAF_RULES (" + parameters + ") VALUES (" + ques + ")"
+            print(qr)
+            db.execute(qr)
             db.commit()
             return redirect(url_for("dashboard.index"))
 
     return render_template("create.html")
 
-
-@bp.route("/<int:id>/update", methods=("GET", "POST"))
+@bp.route("/<int:id>/update", methods =("GET", "POST"))
 @login_required
 def update(id):
-    profile = get_profile(id)
-    ipclients = get_ipclients(id)
-    countryrules = get_countryrule(id)
+    profile = getProfile(id)
+    ipClients = getIpClients(id)
+    countryRules = getCountryRule(id)
     if request.method == "POST":
 
-        try:title = request.form["title"]
-        except:title=None
+        try:
+            title = request.form["title"]
+        except:
+            title= None
 
-        try:description = request.form["description"]
-        except:description=None 
+        try:
+            description = request.form["description"]
+        except:
+            description = None 
 
-        try:onlyallowedip = request.form["onlyallowedip"]
-        except:onlyallowedip = None
+        try:
+            onlyAllowedIp = request.form["OnlyAllowedIP"]
+        except:
+            onlyAllowedIp = None
 
-        try:onlyallowedcountries = request.form["onlyallowedcountries"]
-        except:onlyallowedcountries = None
+        try:
+            onlyAllowedCountries = request.form["onlyAllowedCountries"]
+        except:
+            onlyAllowedCountries = None
 
-        try:proxyblock = request.form["proxyblock"]
-        except:proxyblock = None
+        try:
+            proxyBlock = request.form["proxyBlock"]
+        except:
+            proxyBlock = None
 
-        try:intelligenttest = request.form["intelligenttest"]
-        except:intelligenttest = None
+        try:
+            intelligentTest = request.form["intelligentTest"]
+        except:
+            intelligentTest = None
 
-        try:maxrcv = request.form["maxrcv"]
-        except:maxrcv = None
+        try:
+            maxRcv = request.form["maxRcv"]
+        except:
+            maxRcv = None
 
-        try:requesthold = request.form["requesthold"]
-        except:requesthold = None
+        try:
+            requestHold = request.form["requestHold"]
+        except:
+            requestHold = None
 
-        try:intelligentmode = request.form["intelligentmode"]
-        except:intelligentmode = None
+        try:
+            intelligentMode = request.form["intelligentMode"]
+        except:
+            intelligentMode = None
 
-        try:ipclientUpdate = json.loads(request.form["ipclientUpdate"])
-        except:ipclientUpdate=None
+        try:
+            ipClientUpdate = json.loads(request.form["ipClientUpdate"])
+        except:
+            ipClientUpdate= None
 
-        try:ipclientAdd = json.loads(request.form["ipclientAdd"])
-        except:ipclientAdd=None
+        try:
+            ipClientAdd = json.loads(request.form["ipClientAdd"])
+        except:
+            ipClientAdd= None
 
-        try:ipclientDel = json.loads(request.form["ipclientDel"])
-        except:ipclientDel=None
+        try:
+            ipClientDel = json.loads(request.form["ipClientDel"])
+        except:
+            ipClientDel= None
 
-        try:countryruleUpdate = json.loads(request.form["countryruleUpdate"])
-        except:countryruleUpdate=None
+        try:
+            countryRuleUpdate = json.loads(request.form["countryRuleUpdate"])
+        except:
+            countryRuleUpdate= None
 
-        try:countryruleAdd = json.loads(request.form["countryruleAdd"])
-        except:countryruleAdd=None
+        try:
+            countryRuleAdd = json.loads(request.form["countryRuleAdd"])
+        except:
+            countryRuleAdd= None
 
-        try:countryruleDel = json.loads(request.form["countryruleDel"])
-        except:countryruleDel=None
-        print(countryruleAdd)
+        try:
+            countryRuleDel = json.loads(request.form["countryRuleDel"])
+        except:
+            countryRuleDel= None
+        print(countryRuleAdd)
         
         ##################################IP client##################
-        ##Updating IPclients
+        ##Updating ipClients
         db = get_db()
-        if ipclientUpdate!=None:
-            if len(ipclientUpdate)>0:
-                for i in ipclientUpdate:
-                    ip=None
-                    status=None
-                    cid=i.split("*")[1]
-                    for j in ipclientUpdate[i]:
+        if ipClientUpdate != None:
+            if len(ipClientUpdate) > 0:
+                for i in ipClientUpdate:
+                    ip = None
+                    status = None
+                    id = i.split("*")[1]
+                    for j in ipClientUpdate[i]:
                         try:
-                            if j=="ip":ip=ipclientUpdate[i][j]
-                            elif j=="status":status=int(ipclientUpdate[i][j])
+                            if j == "ip":
+                                ip = ipClientUpdate[i][j]
+                            elif j == "status":
+                                status = int(ipClientUpdate[i][j])
                         except:
-                            ip=None
+                            ip = None
                             pass
-                    if ip!=None:
+                    if ip != None:
                         try:
-                            qry="UPDATE ipclients SET ip='"+ip+"', status="+str(status)+" WHERE id = "+str(cid)
+                            qry = "UPDATE ipClients SET ip='" + ip + "', status = " + str(status) + " WHERE id = " + str(id)
                             db.execute(qry)
                             db.commit()
                         except:
                             traceback.print_exc()
                             pass
 
-        ##Adding Ipclients
+        ##Adding ipClients
         db = get_db()
-        if ipclientAdd!=None:
-            if len(ipclientAdd)>0:
-                for i in ipclientAdd:
-                    ip=None
-                    status=None
-                    for j in ipclientAdd[i]:
+        if ipClientAdd != None:
+            if len(ipClientAdd)>0:
+                for i in ipClientAdd:
+                    ip = None
+                    status = None
+                    for j in ipClientAdd[i]:
                         try:
-                            if j=="ip":ip=ipclientAdd[i][j]
-                            elif j=="status":status=int(ipclientAdd[i][j])
+                            if j == "ip":
+                                ip= ipClientAdd[i][j]
+                            elif j == "status":
+                                status = int(ipClientAdd[i][j])
                         except:
-                            ip=None
+                            ip = None
                             pass
-                    if ip!=None:
+                    if ip != None:
                         try:
-                            qry="INSERT INTO ipclients (ip,status,profID) VALUES ('"+ip+"',"+str(status)+","+str(id)+")"
+                            qry = "INSERT INTO ipClients (ip,status,profID) VALUES ('" + ip + "'," + str(status) + "," + str(id) + ")"
                             db.execute(qry)
                             db.commit()
                         except:
                             traceback.print_exc()
                             pass
 
-        ##Deleting IPclients
+        ##Deleting ipClients
         db = get_db()
-        if ipclientDel!=None:
-            if len(ipclientDel)>0:
-                for i in ipclientDel:
-                    cid=None
-                    try:cid=i.split("*")[1]
-                    except:cid=None
-                    if cid!=None:
+        if ipClientDel != None:
+            if len(ipClientDel) > 0:
+                for i in ipClientDel:
+                    id = None
+                    try:
+                        id = i.split("*")[1]
+                    except:
+                        id = None
+                    if id != None:
                         try:
-                            qry="DELETE FROM ipclients WHERE id="+str(cid)+" AND profID="+str(id)
+                            qry = "DELETE FROM ipClients WHERE id= " + str(id) + " AND profID= " + str(id)
                             db.execute(qry)
                             db.commit()
                         except:
@@ -284,161 +336,161 @@ def update(id):
                             pass
 
         ##################################Country Rule##################
-        ##Updating countryrule
+        ##Updating COUNTRY_RULE
         db = get_db()
-        if countryruleUpdate!=None:
-            if len(countryruleUpdate)>0:
-                for i in countryruleUpdate:
-                    country=None
-                    countryCode=None
-                    status=None
-                    cid=i.split("*")[1]
-                    for j in countryruleUpdate[i]:
+        if countryRuleUpdate != None:
+            if len(countryRuleUpdate) >0:
+                for i in countryRuleUpdate:
+                    country = None
+                    countryCode = None
+                    status = None
+                    id = i.split("*")[1]
+                    for j in countryRuleUpdate[i]:
                         try:
-                            if j=="country":
-                                country=countryruleUpdate[i][j][:-3]
-                                countryCode=countryruleUpdate[i][j][-2:]
-                            elif j=="status":status=int(countryruleUpdate[i][j])
+                            if j == "country":
+                                country =countryRuleUpdate[i][j][:-3]
+                                countryCode =countryRuleUpdate[i][j][-2:]
+                            elif j == "status":
+                                status = int(countryRuleUpdate[i][j])
                         except:
-                            country=None
-                            countryCode=None
+                            country = None
+                            countryCode = None
                             pass
-                    if country!=None:
+                    if country != None:
                         try:
-                            qry="UPDATE countryrule SET country='"+country+"', countryCode='"+countryCode+"', status="+str(status)+" WHERE id = "+str(cid)
+                            qry = "UPDATE COUNTRY_RULE SET country='" + country + "', countryCode='" + countryCode + "', status = " + str(status) + " WHERE id = " + str(id)
                             db.execute(qry)
                             db.commit()
                         except:
                             traceback.print_exc()
                             pass
 
-        ##Adding countryrule
+        ##Adding COUNTRY_RULE
         db = get_db()
-        if countryruleAdd!=None:
-            if len(countryruleAdd)>0:
-                for i in countryruleAdd:
-                    country=None
-                    countryCode=None
-                    status=None
-                    for j in countryruleAdd[i]:
+        if countryRuleAdd != None:
+            if len(countryRuleAdd) >0:
+                for i in countryRuleAdd:
+                    country = None
+                    countryCode = None
+                    status = None
+                    for j in countryRuleAdd[i]:
                         try:
-                            if j=="country":
-                                country=countryruleAdd[i][j][:-3]
-                                countryCode=countryruleAdd[i][j][-2:]
-                            elif j=="status":status=int(countryruleAdd[i][j])
+                            if j == "country":
+                                country = countryRuleAdd[i][j][:-3]
+                                countryCode = countryRuleAdd[i][j][-2:]
+                            elif j == "status":
+                                status = int(countryRuleAdd[i][j])
                         except:
-                            country=None
-                            countryCode=None
+                            country = None
+                            countryCode = None
                             pass
-                    if country!=None:
+                    if country != None:
                         try:
-                            qry="INSERT INTO countryrule (country,countryCode,status,profID) VALUES ('"+country+"','"+countryCode+"',"+str(status)+","+str(id)+")"
+                            qry = "INSERT INTO COUNTRY_RULE (country,countryCode,status,profID) VALUES ('" + country + "','" + countryCode + "'," + str(status) + "," + str(id) + ")"
                             db.execute(qry)
                             db.commit()
                         except:
                             traceback.print_exc()
                             pass
 
-        ##Deleting countryrule
+        ##Deleting COUNTRY_RULE
         db = get_db()
-        if countryruleDel!=None:
-            if len(countryruleDel)>0:
-                for i in countryruleDel:
-                    cid=None
-                    try:cid=i.split("*")[1]
-                    except:cid=None
-                    if cid!=None:
+        if countryRuleDel != None:
+            if len(countryRuleDel) >0:
+                for i in countryRuleDel:
+                    id = None
+                    try:
+                        id = i.split("*")[1]
+                    except:
+                        id = None
+                    if id != None:
                         try:
-                            qry="DELETE FROM countryrule WHERE id="+str(cid)+" AND profID="+str(id)
+                            qry = "DELETE FROM COUNTRY_RULE WHERE id= " + str(id) + " AND profID= " + str(id)
                             db.execute(qry)
                             db.commit()
                         except:
                             traceback.print_exc()
                             pass
 
-
-
-        #updating Wafrules
+        # updating Waf rules
         db = get_db()
-        parms=""
-        l=tuple()
-        if description!=None:
-            l+=(description,)
-            parms+=" description = ?,"
+        parameters = ""
+        parameterValues = tuple()
+        if description != None:
+            parameterValues += (description,)
+            parameters += " description = ?,"
 
-        if title!=None:
-            l+=(title,)
-            parms+=" title = ?,"
+        if title != None:
+            parameterValues += (title,)
+            parameters += " title = ?,"
         
-        if onlyallowedip!=None:
-            l+=(int(onlyallowedip),)
-            parms+=" onlyallowedip = ?,"
+        if onlyAllowedIp != None:
+            parameterValues += (int(onlyAllowedIp),)
+            parameters += " OnlyAllowedIP = ?,"
 
-        if onlyallowedcountries!=None:
-            l+=(int(onlyallowedcountries),)
-            parms+=" onlyallowedcountries = ?,"
+        if onlyAllowedCountries != None:
+            parameterValues += (int(onlyAllowedCountries),)
+            parameters += " onlyAllowedCountries = ?,"
 
-        if proxyblock!=None:
-            l+=(int(proxyblock),)
-            parms+=" proxyblock = ?,"
+        if proxyBlock != None:
+            parameterValues += (int(proxyBlock),)
+            parameters += " proxyBlock = ?,"
 
-        if intelligenttest!=None:
-            l+=(int(intelligenttest),)
-            parms+=" intelligenttest = ?,"
+        if intelligentTest != None:
+            parameterValues += (int(intelligentTest),)
+            parameters += " intelligentTest = ?,"
 
-        if maxrcv!=None:
-            l+=(int(maxrcv),)
-            parms+=" maxrcv = ?,"
+        if maxRcv != None:
+            parameterValues += (int(maxRcv),)
+            parameters += " maxRcv = ?,"
 
-        if requesthold!=None:
-            l+=(int(requesthold),)
-            parms+=" requesthold = ?,"
+        if requestHold != None:
+            parameterValues += (int(requestHold),)
+            parameters += " requestHold = ?,"
 
-        if intelligentmode!=None:
-            l+=(intelligentmode,)
-            parms+=" intelligentmode = ?"
-        l+=(id,)
-        if len(l)>1:
+        if intelligentMode != None:
+            parameterValues += (intelligentMode,)
+            parameters += " intelligentMode = ?"
+        parameterValues += (id,)
+        if len(parameterValues) >1:
             try:
-                db.execute("UPDATE wafrules SET "+parms+" WHERE profID = ?", l)
+                db.execute("UPDATE WAF_RULES SET " + parameters + " WHERE profID = ?", parameterValues)
                 db.commit()
             except:
                 traceback.print_exc()
                 pass
         return redirect(url_for("dashboard.index"))
     else:
-        return render_template("update.html", profile=profile,ipclients=ipclients,countryrules=countryrules)
+        return render_template("update.html", profile=profile, ipClients = ipClients, countryRules =countryRules)
 
-
-@bp.route("/setcurprof", methods=("POST",))
+@bp.route("/setCurrentProfile", methods =("POST",))
 @login_required
-def setcurprof():
+def setCurrentProfile():
     db = get_db()
-    profID=request.form['curprof']
-    qr="UPDATE CURPROF SET profID="+str(profID)+" WHERE profID ="+str(get_curprof())
+    profID = request.form['currentProfile']
+    qr = "UPDATE CURRENT_PROFILE SET profID= " + str(profID) + " WHERE profID = " + str(getCurrentProfile())
     print("#############################################",qr)
     db.execute(qr)
     db.commit()
     return redirect(url_for("dashboard.index"))
 
-@bp.route("/setcurserv", methods=("POST",))
+@bp.route("/setCurrentServer", methods =("POST",))
 @login_required
-def setcurserv():
+def setCurrentServer():
     db = get_db()
-    host=request.form['curservhost']
-    port=request.form['curservport']
-    qr="UPDATE CURSERV SET host='"+str(host)+"' , port="+str(port)
+    host = request.form['currentServerHost']
+    port = request.form['currentServerPort']
+    qr = "UPDATE CURRENT_SERVER SET host='" + str(host) + "' , port= " + str(port)
     print("#############################################",qr)
     db.execute(qr)
     db.commit()
     return redirect(url_for("dashboard.index"))
 
-
-@bp.route("/<int:id>/delete", methods=("POST",))
+@bp.route("/<int:id>/delete", methods =("POST",))
 @login_required
 def delete(id):
-    get_profile(id)
+    getProfile(id)
     db = get_db()
-    db.execute("DELETE FROM wafrules WHERE profID = ?", (id,))
+    db.execute("DELETE FROM WAF_RULES WHERE profID = ?", (id,))
     db.commit()
     return redirect(url_for("dashboard.index"))
