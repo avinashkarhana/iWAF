@@ -66,9 +66,9 @@ def getIpInfo(ip):
     return(IpInfo)
 
 #working thread START
-def filterThread(conn, client_addr):
+def filterThread(conn, clientAddress):
     # get client IP Info
-    ipDetails = getIpInfo(str(client_addr[0]))
+    ipDetails = getIpInfo(str(clientAddress[0]))
     #set essential dict keys if status fail
     if ipDetails['status'] == 'fail':
         for b in IpDetailFields:
@@ -108,7 +108,7 @@ def filterThread(conn, client_addr):
             or not OnlyAllowedCountries
             and ipDetails['countryCode'] in BLOCKED_COUNTRY
         ):
-            printInfoOut("[BLOCKED]Country Blocked(" + ipDetails['country'] + ")", reqFirstLine, client_addr)
+            printInfoOut("[BLOCKED]Country Blocked(" + ipDetails['country'] + ")", reqFirstLine, clientAddress)
             send_response(
                 conn,
                 b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service is not available in your country !!</h1>\r\n',
@@ -123,7 +123,7 @@ def filterThread(conn, client_addr):
     # check PROXY IPs START
     try:
         if ipDetails['proxy'] == True and PROXY_BLOCK:
-            printInfoOut("[BLOCKED]PROXY IP", reqFirstLine, client_addr)
+            printInfoOut("[BLOCKED]PROXY IP", reqFirstLine, clientAddress)
             send_response(
                 conn,
                 b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>This service can not be used with proxy !!</h1>\r\n',
@@ -139,11 +139,11 @@ def filterThread(conn, client_addr):
     try:
         if (
             OnlyAllowedIP
-            and client_addr[0] not in ALLOWED_CLIENTS
+            and clientAddress[0] not in ALLOWED_CLIENTS
             or not OnlyAllowedIP
-            and client_addr[0] in BLOCKED_CLIENTS
+            and clientAddress[0] in BLOCKED_CLIENTS
         ):
-            printInfoOut("[BLOCKED]IP Blacklisted", reqFirstLine, client_addr)
+            printInfoOut("[BLOCKED]IP Blacklisted", reqFirstLine, clientAddress)
             send_response(
                 conn,
                 b'\r\nHTTP/1.1 200 OK\r\n\r\n<h1>IP Blacklisted !!</h1>\r\n',
@@ -172,9 +172,9 @@ def filterThread(conn, client_addr):
             if rule in reqLastPart :
                 conn.send(failAttemptMsg)
                 conn.close()
-                printInfoOut("[BLOCKED]SQL Injection", reqFirstLine, client_addr)
+                printInfoOut("[BLOCKED]SQL Injection", reqFirstLine, clientAddress)
                 with open('intrusion.log','a+') as intrusionLogFile:
-                    intrusionLogFile.write("\nSQL Injection(REGEX)❡" + str(reqFirstLine) + "❡" + str(client_addr[0]) + ":" + str(client_addr[1]) + "❡" + str(reqFirstPart+reqLastPart) + "\n")
+                    intrusionLogFile.write("\nSQL Injection(REGEX)❡" + str(reqFirstLine) + "❡" + str(clientAddress[0]) + ":" + str(clientAddress[1]) + "❡" + str(reqFirstPart+reqLastPart) + "\n")
                 try:
                     sys.exit(1)
                 except SystemExit:
@@ -188,9 +188,9 @@ def filterThread(conn, client_addr):
             if rule in reqFirstLine :
                 conn.send(failAttemptMsg)
                 conn.close()
-                printInfoOut("[BLOCKED]SQL Injection", reqFirstLine, client_addr)
+                printInfoOut("[BLOCKED]SQL Injection", reqFirstLine, clientAddress)
                 with open('intrusion.log','a+') as intrusionLogFile:
-                    intrusionLogFile.write("\nSQL Injection(REGEX)❡" + str(reqFirstLine)+"❡" + str(client_addr[0])+":" + str(client_addr[1]) + "❡" + str(reqFirstPart + reqLastPart))
+                    intrusionLogFile.write("\nSQL Injection(REGEX)❡" + str(reqFirstLine)+"❡" + str(clientAddress[0])+":" + str(clientAddress[1]) + "❡" + str(reqFirstPart + reqLastPart))
                 try:
                     sys.exit(1)
                 except SystemExit:
@@ -218,9 +218,9 @@ def filterThread(conn, client_addr):
                     if intelligentPredResult > INTELLIGENT_THRESHOLD[INTELLIGENT_MODE.upper()]:
                         conn.send(failAttemptMsg + b'i')
                         conn.close()
-                        printInfoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection", reqFirstLine, client_addr)
+                        printInfoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection", reqFirstLine, clientAddress)
                         with open('intrusion.log','a+') as intrusionLogFile:
-                            intrusionLogFile.write("\nSQL Injection(INTELLIGENT)❡" + str(reqFirstLine) + "❡" + str(client_addr[0])+ ":" + str(client_addr[1]) + "❡" + str(reqFirstPart+reqLastPart))
+                            intrusionLogFile.write("\nSQL Injection(INTELLIGENT)❡" + str(reqFirstLine) + "❡" + str(clientAddress[0])+ ":" + str(clientAddress[1]) + "❡" + str(reqFirstPart+reqLastPart))
                         try:
                             sys.exit(1)
                         except SystemExit:
@@ -239,9 +239,9 @@ def filterThread(conn, client_addr):
                     if intelligentPredResult > INTELLIGENT_THRESHOLD[INTELLIGENT_MODE.upper()]:
                         conn.send(failAttemptMsg + b'i')
                         conn.close()
-                        printInfoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection", reqFirstLine, client_addr)
+                        printInfoOut("[BLOCKED]Intelligent System Marked Request as SQL Injection", reqFirstLine, clientAddress)
                         with open('intrusion.log', 'a+') as intrusionLogFile:
-                            intrusionLogFile.write("\nSQL Injection(INTELLIGENT)❡" + str(reqFirstLine) + "❡" + str(client_addr[0])+ ":" + str(client_addr[1]) + "❡" + str(reqFirstPart+reqLastPart))
+                            intrusionLogFile.write("\nSQL Injection(INTELLIGENT)❡" + str(reqFirstLine) + "❡" + str(clientAddress[0])+ ":" + str(clientAddress[1]) + "❡" + str(reqFirstPart+reqLastPart))
                         try:
                             sys.exit(1)
                         except SystemExit:
@@ -271,7 +271,7 @@ def filterThread(conn, client_addr):
             IPData = " Country : " + ipDetails['country'] + " (" + ipDetails['regionName'] + ")"
             if ipDetails['proxy'] == 'true':
                 IPData += " [PROXY]"
-        ipAddress = [client_addr[0]]
+        ipAddress = [clientAddress[0]]
         ipAddress[0] += IPData
         printInfoOut("Request", reqFirstLine, ipAddress)
     except:
@@ -279,13 +279,13 @@ def filterThread(conn, client_addr):
     # LOGGING END
 
     #Web Application address
-    webServer = CURRENT_SERVER_HOST
+    webApplicationServer = CURRENT_SERVER_HOST
     #Web Application port
     port = ":" + str(CURRENT_SERVER_PORT) if int(CURRENT_SERVER_PORT) != 80 else ""
     #replace WAF server with actual server in request
     try:
         second_line = request.split(b'\n')[1].split(b" ")[1][:-1]
-        request = request.replace(second_line,(webServer+str(port)).encode('utf-8'))
+        request = request.replace(second_line,(webApplicationServer+str(port)).encode('utf-8'))
     except:
         trace("Could not replace server with actual server in request but, still trying to send!")
 
@@ -295,15 +295,15 @@ def filterThread(conn, client_addr):
             reqLastPart = b'\r\n' + request[request.find(request.split(b'\n')[1]):]
         else:
             reqLastPart = ''
-        request = request.split(b'\n')[0][:-1] + b'\r\nTrue-Client-IP: ' + (str(client_addr[0]).encode('utf-8')) + reqLastPart
+        request = request.split(b'\n')[0][:-1] + b'\r\nTrue-Client-IP: ' + (str(clientAddress[0]).encode('utf-8')) + reqLastPart
     except:
         trace("Failed to Inject True-Client-IP")
 
-    #WEB APPLICATION SOCKET
+    #Create a WEB APPLICATION SOCKET to send request to actual web application
     try:
         # web application connection Socket that can handle https
         webSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        webSocket.connect((webServer, int(CURRENT_SERVER_PORT)))
+        webSocket.connect((webApplicationServer, int(CURRENT_SERVER_PORT)))
         # send request
         webSocket.send(request)
 
@@ -323,7 +323,7 @@ def filterThread(conn, client_addr):
             webSocket.close()
         if conn:
             conn.close()
-        printInfoOut("Session Reset", reqFirstLine, client_addr)
+        printInfoOut("Session Reset", reqFirstLine, clientAddress)
         try:
             sys.exit(1)
         except SystemExit:
