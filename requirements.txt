@@ -24,7 +24,7 @@ grpcio==1.40.0
 h5py==3.1.0
 idna==2.10
 ipykernel==6.4.1
-ipython==7.31.1
+ipython==8.10.0
 ipython-genutils==0.2.0
 itsdangerous==2.0.1
 jedi==0.18.0
