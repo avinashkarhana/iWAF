@@ -7,7 +7,9 @@ import re
 from .SQLiVectorizer import SQLiVectorizer
 
 class Intelligent:
-    modelFolderPath = "./iwaf/intelligent/"
+    rootFolder = "./iwaf/"
+    rootFolder = ''
+    modelFolderPath = rootFolder + "intelligent/"
     mymodel = load_model(modelFolderPath + 'binary_crossEntropy@adam-Final-SQLI-Model.h5')
     vectorizer = SQLiVectorizer()
     vectorize =  vectorizer.Vectorize

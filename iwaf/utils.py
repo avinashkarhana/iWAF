@@ -236,3 +236,25 @@ SPECIAL_CHARACTER_HTML_MAPPING = {
     "×":"&times;",
     "÷":"&divide;"
 }
+
+CommonSQLInjectionRules = [ 
+    b'%2BAND%28UNION',
+    b'%2BAND%2BUNION%28',
+    b'UNION%2BSELECT',
+    b'||%2B%28SELECT',
+    b'||%2BSUBSTR(',
+    b'+AND+UNION',
+    b'+AND+UNION(',
+    b'UNION+SELECT',
+    b'||+(SELECT',
+    b'||+SUBSTR(',
+    b' AND UNION',
+    b' AND UNION(',
+    b'UNION SELECT',
+    b'UNION%20SELECT',
+    b'|| (SELECT',
+    b'|| SUBSTR(' 
+]
+
+
+

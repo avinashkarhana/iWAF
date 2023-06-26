@@ -56,8 +56,10 @@ class SQLiVectorizer:
                 requestString = requestString.lower()
                 return  requestString.count(symbol)
             
+            symbol_counts = []
             for symbol in symbols:
-                df[symbol] = df.apply (lambda row: countSymbols(symbol,row['Sentence']), axis=1)
+                symbol_counts.append(df.apply(lambda row: countSymbols(symbol, row['Sentence']), axis=1))
+            df = pd.concat([df] + symbol_counts, axis=1)
             return df
         
         #calculate length

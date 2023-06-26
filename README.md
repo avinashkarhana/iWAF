@@ -4,7 +4,7 @@ Intelligent Web Application Firewall
 ## RUN
 
 ### In one terminal/cmd in `iWaf` directory
-> pip3 install -r requirements.txt
+> pip install -r requirements.txt
 
 > cd iwaf
 

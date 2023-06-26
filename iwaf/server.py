@@ -8,8 +8,12 @@ import json
 import sqlite3
 import time
 import traceback
-from specialCharacterHtmlMapping import SPECIAL_CHARACTER_HTML_MAPPING
+#from gevent import monkey; monkey.patch_all()
+from gevent.pywsgi import WSGIServer
+from geventwebsocket.handler import WebSocketHandler
+from utils import SPECIAL_CHARACTER_HTML_MAPPING, CommonSQLInjectionRules
 from __init__ import __version__
+from defaultConfig import *
 
 USAGE_STRING = """Usage: python3 waf.py [...options]
 Options:
@@ -24,38 +28,10 @@ Options:
 # Instance Holder of Intelligent class
 intelligentPredictor = None
 
-####################################################################
-####################### Default Configuration START#################
-####################################################################
-FIREWALL_PORT = 8080
-FIREWALL_HOST = ''
-CURRENT_SERVER_HOST = "localhost" # Current application server host
-CURRENT_SERVER_PORT = 80       # Current application port
-DEBUG = False                # debug mode to see all debug messages
-ALLOWED_CLIENTS = []         # Allowed Clients
-BLOCKED_CLIENTS = []         # BLOCKED clients
-REQUEST_HOLD = 50            # number connections to hold
-MAX_RCV = 999999             # max number data bytes to receive
-PROXY_BLOCK = False           # Block access through known Web Proxy or VPN
-INTELLIGENT_REQ_TEST = False # Intelligent request testing via Machine Learning (Increases Response time!)
-OnlyAllowedCountries = False # Check for only allowed countries rule
-OnlyAllowedIP = False        # Check for only allowed IP rule
-ALLOWED_COUNTRIES = []       # Allowed Access in specific countries via IP geo location
-BLOCKED_COUNTRY = []         # Blocked Access in specific countries via IP geo location
-INTELLIGENT_MODE = 'NORMAL'   # Intelligent mode
-INTELLIGENT_THRESHOLD={'NORMAL':.50,'HARD':0.481,'UNDER-ATTACK':.441} # Intelligent Threshold values as per modes
-####################################################################
-####################### Default Configuration END###################
-####################################################################
-
-
-IpDetailFields = ["status","message","country","countryCode","region","regionName","city","district","zip","lat","lon","timezone","currency","isp","org","as","mobile","proxy","hosting"]
-
-CommonSQLInjectionRules = [ b'%2BAND%28UNION', b'%2BAND%2BUNION%28', b'UNION%2BSELECT', b'||%2B%28SELECT', b'||%2BSUBSTR(', b'+AND+UNION', b'+AND+UNION(', b'UNION+SELECT', b'||+(SELECT', b'||+SUBSTR(' ,b' AND UNION', b' AND UNION(', b'UNION SELECT', b'UNION%20SELECT', b'|| (SELECT', b'|| SUBSTR(' ]
-
 IPCache = {}
 
 def getIpInfo(ip):
+    global IPCache
     if ip not in IPCache:
         url = "http://ip-api.com/json/" + ip + '?fields=status,message,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,currency,isp,org,as,mobile,proxy,hosting'
         resp = str(requests.get(url,'30').content)[2:-1]
@@ -71,6 +47,7 @@ def filterThread(conn, clientAddress):
     ipDetails = getIpInfo(str(clientAddress[0]))
     #set essential dict keys if status fail
     if ipDetails['status'] == 'fail':
+        IpDetailFields = ["status","message","country","countryCode","region","regionName","city","district","zip","lat","lon","timezone","currency","isp","org","as","mobile","proxy","hosting"]
         for b in IpDetailFields:
             if b != 'status':
                 ipDetails[b] = ''
@@ -357,6 +334,7 @@ def dbRuleUpdateThread(profileId=None):
     #creating connection to Sqlite3 Database
     try:
         dbFileContainerPath = "./iwaf/"
+        dbFileContainerPath = ""
         conn = sqlite3.connect(dbFileContainerPath + 'waf.db')
         conn.row_factory = dictFactory
         while True:
@@ -492,6 +470,8 @@ def dbRuleUpdateThread(profileId=None):
         conn.commit()
         conn.close()
     except:
+        if DEBUG:
+            traceback.print_exc()
         print("Failed to connect to database, using in-file rules!")
 
 #Output info if DEBUG true and color code as per rule hit
@@ -516,23 +496,34 @@ def main():
     global FIREWALL_HOST
     global FIREWALL_PORT
     global DEBUG
+    global ENVIRONMENT
+    
     profileID = None
     
-    for arg in sys.argv:
-        if arg.split("=")[0].lower() == "debug" and arg.split("=")[1].lower() == "true":
-            DEBUG = True
-        if arg.split("=")[0].lower() == "port":
-            FIREWALL_PORT = arg.split("=")[1]
-        if arg.split("=")[0].lower() == "host":
-            FIREWALL_HOST = arg.split("=")[1]
-        if arg.split("=")[0].lower() == "profileId".lower():
-            profileID = arg.split("=")[1]
-        if "help" in arg.split("=")[0].lower():
+    for i in range(len(sys.argv)):
+        arg = sys.argv[i]
+        # if i ==0 and arg is number then set port to arg
+        if i == 1 and arg.isdigit():
+            FIREWALL_PORT = int(arg)
+        try:
+            if arg.split("=")[0].lower() == "debug" and arg.split("=")[1].lower() == "true":
+                DEBUG = True
+            if arg.split("=")[0].lower() == "port":
+                FIREWALL_PORT = int(arg.split("=")[1])
+            if arg.split("=")[0].lower() == "host":
+                FIREWALL_HOST = arg.split("=")[1]
+            if arg.split("=")[0].lower() == "profileId".lower():
+                profileID = arg.split("=")[1]
+            if "help" in arg.split("=")[0].lower():
+                print(USAGE_STRING)
+                sys.exit(0)
+            if "version" in arg.split("=")[0].lower():
+                print(__version__)
+                sys.exit(0)
+        except:
+            print("Invalid Argument !")
             print(USAGE_STRING)
-            sys.exit(0)
-        if "version" in arg.split("=")[0].lower():
-            print(__version__)
-            sys.exit(0)
+            exit(1)
 
     # start thread to get updates from database
     try:
@@ -543,7 +534,9 @@ def main():
         print("Could not start thread for database Updates!\n#########Running on in-file rules !#########")
 
     print ("WAF Server Running on ", FIREWALL_HOST, ":", FIREWALL_PORT)
+    wafWebSocket = None
 
+    print("Running in Development Mode !")
     try:
         wafWebSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # set address and port reuse
@@ -577,7 +570,7 @@ def main():
         # request handling thread creation
         thread.start_new_thread(filterThread, (conn, client_addr))
     wafWebSocket.close()
-    
+
 if __name__ == '__main__':
     main()
     try:
